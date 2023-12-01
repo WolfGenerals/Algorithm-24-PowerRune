@@ -1,0 +1,9 @@
+**/logs/
+**/log/
+**/build/
+**/bin/
+**/install/
+**/cmake-build*
+
+**/.idea/
+**/.vscode/
