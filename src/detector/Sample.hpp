@@ -6,7 +6,6 @@
 #define ARM_HPP
 #include "Alias.hpp"
 #include "opencv2/opencv.hpp"
-#include <yaml-cpp/node/node.h>
 
 /**
  * \brief 能量机关的臂
@@ -17,8 +16,6 @@ public:
     const cv::Point2f centre;
     /**\brief 打击点 */
     const cv::Point2f target;
-
-    [[nodiscard]] static auto of(YAML::Node node) -> Sample;
 
     [[nodiscard]] auto transform(const Transform &transform) const -> Sample;
     [[nodiscard]] auto showOn(const Image &image) const -> Image;

@@ -7,10 +7,6 @@
 using namespace std;
 using namespace cv;
 
-auto Sample::of(YAML::Node node) -> Sample {
-    return {{node["centre"]["x"].as<float>(), node["centre"]["y"].as<float>()},
-            {node["target"]["x"].as<float>(), node["target"]["y"].as<float>()}};
-}
 auto Sample::transform(const Transform &transform) const -> Sample {
     if (transform.empty())
         return *this;
