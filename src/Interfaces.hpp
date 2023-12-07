@@ -5,4 +5,13 @@
 #ifndef INTERFACES_HPP
 #define INTERFACES_HPP
 
-#endif //INTERFACES_HPP
+struct  Direction {
+  const double pitch;
+  const double yaw;
+};
+
+struct Arm {
+  const Direction target;
+  const Direction centre;
+};
+#endif // INTERFACES_HPP

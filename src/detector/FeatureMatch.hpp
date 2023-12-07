@@ -4,7 +4,7 @@
 #ifndef FEATUREMATCH_HPP
 #define FEATUREMATCH_HPP
 
-#include "../Alias.hpp"
+#include "Alias.hpp"
 #include "opencv2/opencv.hpp"
 
 /**
@@ -14,7 +14,6 @@ class Feature {
 public:
     const std::vector<cv::KeyPoint> keyPoints;
     const Descriptors                   descriptors;
-    const Image                   image;
 
     /**
      * \brief 计算特征点
@@ -22,8 +21,6 @@ public:
      * \return 图像的特征点
      */
     static auto of(const Image &image) -> Feature;
-
-    [[nodiscard]] auto show() const -> Image;
 };
 
 /**
@@ -48,7 +45,6 @@ public:
      * \return 从参考图像到实际图像的透视变换
      */
     [[nodiscard]] auto transform() const -> Transform;
-    [[nodiscard]] auto show() const -> Image;
 };
 
 #endif//FEATUREMATCH_HPP

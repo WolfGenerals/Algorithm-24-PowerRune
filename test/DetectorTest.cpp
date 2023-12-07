@@ -1,7 +1,3 @@
-#include "Alias.hpp"
-#include "Arm.hpp"
-#include "FeatureMatch.hpp"
-#include "ImageDetail.hpp"
 #include "opencv2/opencv.hpp"
 
 using namespace cv;

@@ -5,7 +5,7 @@
 #include <vector>
 
 using Descriptors = cv::Mat;
-using Transform = cv::Mat;
-using Image = cv::Mat;
+using Transform   = cv::Mat;
+using Image       = cv::Mat;
 
-#endif // ALIAS_HPP
+#endif// ALIAS_HPP

@@ -3,7 +3,6 @@
 //
 
 #include "FeatureMatch.hpp"
-#include "opencv2/xfeatures2d.hpp"
 
 using namespace std;
 using namespace cv;
@@ -17,13 +16,7 @@ auto Feature::of(const Image &image) -> Feature {
 
     descriptor->detectAndCompute(image, noArray(), keyPoints, descriptors);
 
-    return {move(keyPoints), move(descriptors), image};
-}
-
-auto Feature::show() const -> Image {
-    Image out;
-    drawKeypoints(image, keyPoints, out);
-    return out;
+    return {move(keyPoints), move(descriptors)};
 }
 
 
@@ -54,14 +47,4 @@ auto Matches::transform() const -> Transform {
     }
 
     return findHomography(ref, act, RANSAC);
-}
-
-auto Matches::show() const -> Image {
-    Image out;
-    drawMatches(
-            actual.image.clone(), actual.keyPoints,
-            reference.image.clone(), reference.keyPoints,
-            matches,
-            out);
-    return out;
 }
