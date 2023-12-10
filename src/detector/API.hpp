@@ -18,7 +18,7 @@ class Detector {
 public:
     Detector(const Image &sampleImage, cv::Point2f centre, cv::Point2f target, double xAngle, double yAngle);
 
-    [[nodiscard]] auto directionOf(const Image &image) const -> Arm;
+    [[nodiscard]] auto directionOf(const Image &image) const -> DetectorReturn;
 };
 
 #endif//API_HPP

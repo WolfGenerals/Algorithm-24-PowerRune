@@ -15,14 +15,19 @@ Detector::Detector(const Image &sampleImage, const Point2f centre, const Point2f
       featureSample(Feature::of(sampleImage)),
       xAngle(xAngle), yAngle(yAngle) {}
 
-auto Detector::directionOf(const Image &image) const -> Arm {
+auto Detector::directionOf(const Image &image) const -> DetectorReturn {
     Image img;
     cvtColor(image, img, COLOR_BGR2GRAY);
 
     const Feature feature = Feature::of(image);
     const Matches matches = Matches::between(featureSample, feature);
-    auto [centre, target] = sample.transform(matches.transform());
-    return {{(img.rows / 2.0 - target.y) / image.rows * yAngle,
+    const Transform transform   = matches.transform();
+
+    if (transform.empty()) return {true};
+
+    auto [centre, target] = sample.transform(transform);
+    return {false,
+            {(img.rows / 2.0 - target.y) / image.rows * yAngle,
              (img.cols / 2.0 - target.x) / image.cols * xAngle},
 
             {(img.rows / 2.0 - centre.y) / image.rows * yAngle,

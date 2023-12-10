@@ -4,14 +4,22 @@
 
 #ifndef INTERFACES_HPP
 #define INTERFACES_HPP
+#include <opencv2/core/types.hpp>
 
-struct  Direction {
-  const double pitch;
-  const double yaw;
+struct Direction {
+    const double pitch;
+    const double yaw;
 };
 
-struct Arm {
-  const Direction target;
-  const Direction centre;
+
+struct DetectorReturn {
+    const bool      null;
+    const Direction target;
+    const Direction centre;
 };
-#endif // INTERFACES_HPP
+
+struct BallisticsInput {
+    const cv::Point2f target;
+    const cv::Point2f centre;
+};
+#endif// INTERFACES_HPP
