@@ -2,7 +2,7 @@
 // Created by mojiw on 2023/12/7.
 //
 
-#include "API.hpp"
+#include "Detector.hpp"
 #include "FeatureMatch.hpp"
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc.hpp>
@@ -15,7 +15,7 @@ Detector::Detector(const Image &sampleImage, const Point2f centre, const Point2f
       featureSample(Feature::of(sampleImage)),
       xAngle(xAngle), yAngle(yAngle) {}
 
-auto Detector::directionOf(const Image &image) const -> DetectorReturn {
+auto Detector::directionOf(const Image &image) const -> RuneDirection {
     Image img;
     cvtColor(image, img, COLOR_BGR2GRAY);
 

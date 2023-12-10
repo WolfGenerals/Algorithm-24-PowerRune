@@ -1,4 +1,4 @@
-#include "../src/detector/API.hpp"
+#include "..\src\detector\Detector.hpp"
 #include "gtest/gtest.h"
 
 TEST(DetectorTest, Init) {

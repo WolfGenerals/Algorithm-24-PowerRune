@@ -22,8 +22,10 @@ add_executable(${PROJECT_NAME}
         src/detector/Sample.hpp
         src/detector/FeatureMatch.cpp
         src/detector/FeatureMatch.hpp
-        src/detector/API.cpp
-        src/detector/API.hpp
+        src/detector/Detector.cpp
+        src/detector/Detector.hpp
+        src/filter/Converter.cpp
+        src/filter/Converter.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -45,8 +47,8 @@ add_executable(DetectorTest
         src/detector/Sample.hpp
         src/detector/FeatureMatch.cpp
         src/detector/FeatureMatch.hpp
-        src/detector/API.cpp
-        src/detector/API.hpp
+        src/detector/Detector.cpp
+        src/detector/Detector.hpp
 )
 target_link_libraries(
         DetectorTest
