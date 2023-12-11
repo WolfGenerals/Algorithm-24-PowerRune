@@ -17,15 +17,13 @@ find_package(OpenCV REQUIRED)
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/Interfaces.hpp
-        src/detector/Alias.hpp
-        src/detector/Sample.cpp
-        src/detector/Sample.hpp
-        src/detector/FeatureMatch.cpp
-        src/detector/FeatureMatch.hpp
-        src/detector/Detector.cpp
-        src/detector/Detector.hpp
+        src/detector/api.cpp
+        src/detector/api.hpp
+        src/detector/Feature.cpp
+        src/detector/Feature.hpp
+        src/detector/Matches.cpp
+        src/detector/Matches.hpp
         src/filter/Converter.cpp
-        src/filter/Converter.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -43,12 +41,13 @@ include(GoogleTest)
 
 add_executable(DetectorTest
         test/DetectorTest.cpp
-        src/detector/Sample.cpp
-        src/detector/Sample.hpp
-        src/detector/FeatureMatch.cpp
-        src/detector/FeatureMatch.hpp
-        src/detector/Detector.cpp
-        src/detector/Detector.hpp
+        src/Interfaces.hpp
+        src/detector/api.cpp
+        src/detector/api.hpp
+        src/detector/Feature.cpp
+        src/detector/Feature.hpp
+        src/detector/Matches.cpp
+        src/detector/Matches.hpp
 )
 target_link_libraries(
         DetectorTest

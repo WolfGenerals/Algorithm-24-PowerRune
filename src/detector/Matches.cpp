@@ -1,24 +1,11 @@
 //
-// Created by mojiw on 2023/12/5.
+// Created by mojiw on 2023/12/11.
 //
 
-#include "FeatureMatch.hpp"
+#include "Matches.hpp"
 
 using namespace std;
 using namespace cv;
-
-const Ptr<Feature2D> detector   = ORB::create(500, 2, 1, 31, 0, 2, ORB::HARRIS_SCORE, 127, 20);
-const Ptr<Feature2D> descriptor = detector;
-
-auto Feature::of(const Image &image) -> Feature {
-    auto keyPoints   = vector<KeyPoint>();
-    auto descriptors = Descriptors();
-
-    descriptor->detectAndCompute(image, noArray(), keyPoints, descriptors);
-
-    return {move(keyPoints), move(descriptors)};
-}
-
 
 const Ptr<DescriptorMatcher> matcher = BFMatcher::create();
 
@@ -35,16 +22,19 @@ auto Matches::between(const Feature &reference, const Feature &actual) -> Matche
     return {reference, actual, move(goodMatch)};
 }
 
-auto Matches::transform() const -> Transform {
-    if (matches.size() < 4) return {};
+auto Matches::transform() const -> std::optional<Transform> {
+    if (matches.size() < 4) return nullopt;
 
-    auto ref = vector<Point2f>();
-    auto act = vector<Point2f>();
+    vector<Point2f> ref;
+    vector<Point2f> act;
 
     for (const DMatch &match: matches) {
         ref.push_back(reference.keyPoints[match.trainIdx].pt);
         act.push_back(actual.keyPoints[match.queryIdx].pt);
     }
 
-    return findHomography(ref, act, RANSAC);
+    Transform transform = findHomography(ref, act, RANSAC);
+    if (transform.empty()) return nullopt;
+
+    return transform;
 }

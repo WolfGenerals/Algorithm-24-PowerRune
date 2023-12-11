@@ -1,33 +1,20 @@
 //
-// Created by mojiw on 2023/12/5.
+// Created by mojiw on 2023/12/11.
+//
 
-#ifndef FEATUREMATCH_HPP
-#define FEATUREMATCH_HPP
+#ifndef MATCHES_HPP
+#define MATCHES_HPP
+#include "Feature.hpp"
 
-#include "Alias.hpp"
-#include "opencv2/opencv.hpp"
 
-/**
- * \brief 图像的特征点
- */
-class Feature {
-public:
-    const std::vector<cv::KeyPoint> keyPoints;
-    const Descriptors                   descriptors;
+#include <optional>
+#include <vector>
 
-    /**
-     * \brief 计算特征点
-     * \param image 源图像
-     * \return 图像的特征点
-     */
-    static auto of(const Image &image) -> Feature;
-};
 
 /**
  * \brief 两个特征间的匹配关系
  */
-class Matches {
-public:
+struct Matches {
     const Feature                &reference;
     const Feature                &actual;
     const std::vector<cv::DMatch> matches;
@@ -44,7 +31,8 @@ public:
      * \brief 计算透视变换
      * \return 从参考图像到实际图像的透视变换
      */
-    [[nodiscard]] auto transform() const -> Transform;
+    [[nodiscard]] auto transform() const -> std::optional<Transform>;
 };
 
-#endif//FEATUREMATCH_HPP
+
+#endif //MATCHES_HPP

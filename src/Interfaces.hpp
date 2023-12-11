@@ -16,15 +16,9 @@ struct Direction {
     [[nodiscard]] auto distance() const -> double { return sqrt(distance2()); }
 };
 
-
-struct RuneDirection {
-    const bool      null;
-    const Direction target;
-    const Direction centre;
-};
-
-struct BallisticsInput {
-    const cv::Point2f target;
-    const cv::Point2f centre;
+template<typename T>
+struct Rune {
+    const T target;
+    const T centre;
 };
 #endif// INTERFACES_HPP

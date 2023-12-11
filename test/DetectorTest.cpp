@@ -1,11 +1,14 @@
-#include "..\src\detector\Detector.hpp"
+#include "../src/detector/api.hpp"
 #include "gtest/gtest.h"
+#include <opencv2/core/mat.hpp>
 
 TEST(DetectorTest, Init) {
-    Detector(Image(), cv::Point(0, 0), cv::Point(0, 0), 0, 0);
+    RuneFromCamera(cv::Mat::zeros(1, 1, CV_8UC3), {{1, 1}, {1, 1}});
 }
 
 TEST(DetectorTest, Call) {
-    const Detector detector(Image(100, 100, CV_8UC3), cv::Point(0, 0), cv::Point(0, 0), 10, 10);
-    auto           directionOf = detector.directionOf(Image(100, 100, CV_8UC3));
+    const auto runeFromCamera = RuneFromCamera(cv::Mat::zeros(1, 1, CV_8UC3),
+                                               {{1, 1}, {1, 1}});
+    auto       fromCamera =
+            runeFromCamera(cv::Mat::zeros(1, 1, CV_8UC3));
 }
