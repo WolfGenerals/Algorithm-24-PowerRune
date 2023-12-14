@@ -17,12 +17,12 @@ find_package(OpenCV REQUIRED)
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/Interfaces.hpp
-        src/detector/RuneRecognizer.cpp
-        src/detector/RuneRecognizer.hpp
-        src/detector/Feature.cpp
-        src/detector/Feature.hpp
-        src/detector/Matches.cpp
-        src/detector/Matches.hpp
+        src/RuneRecognizer/RuneRecognizer.cpp
+        src/RuneRecognizer/RuneRecognizer.hpp
+        src/RuneRecognizer/Feature.cpp
+        src/RuneRecognizer/Feature.hpp
+        src/RuneRecognizer/Matches.cpp
+        src/RuneRecognizer/Matches.hpp
         src/filter/Converter.cpp
 )
 
@@ -39,19 +39,20 @@ FetchContent_Declare(googletest
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
-add_executable(DetectorTest
-        test/DetectorTest.cpp
+add_executable(RuneRecognizer
+        test/RuneRecognizer/RuneRecognizerTest.cpp
         src/Interfaces.hpp
-        src/detector/RuneRecognizer.cpp
-        src/detector/RuneRecognizer.hpp
-        src/detector/Feature.cpp
-        src/detector/Feature.hpp
-        src/detector/Matches.cpp
-        src/detector/Matches.hpp
+        src/RuneRecognizer/RuneRecognizer.cpp
+        src/RuneRecognizer/RuneRecognizer.hpp
+        src/RuneRecognizer/Feature.cpp
+        src/RuneRecognizer/Feature.hpp
+        src/RuneRecognizer/Matches.cpp
+        src/RuneRecognizer/Matches.hpp
+
 )
 target_link_libraries(
-        DetectorTest
+        RuneRecognizer
         ${OpenCV_LIBS}
         GTest::gtest_main
 )
-gtest_discover_tests(DetectorTest)
+gtest_discover_tests(RuneRecognizer)
