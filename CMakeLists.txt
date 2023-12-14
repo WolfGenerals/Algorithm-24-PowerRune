@@ -17,8 +17,8 @@ find_package(OpenCV REQUIRED)
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/Interfaces.hpp
-        src/detector/api.cpp
-        src/detector/api.hpp
+        src/detector/RuneRecognizer.cpp
+        src/detector/RuneRecognizer.hpp
         src/detector/Feature.cpp
         src/detector/Feature.hpp
         src/detector/Matches.cpp
@@ -42,8 +42,8 @@ include(GoogleTest)
 add_executable(DetectorTest
         test/DetectorTest.cpp
         src/Interfaces.hpp
-        src/detector/api.cpp
-        src/detector/api.hpp
+        src/detector/RuneRecognizer.cpp
+        src/detector/RuneRecognizer.hpp
         src/detector/Feature.cpp
         src/detector/Feature.hpp
         src/detector/Matches.cpp

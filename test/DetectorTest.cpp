@@ -1,4 +1,4 @@
-#include "../src/detector/api.hpp"
+#include "..\src\detector\RuneRecognizer.hpp"
 #include "gtest/gtest.h"
 #include <opencv2/core/mat.hpp>
 

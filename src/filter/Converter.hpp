@@ -23,5 +23,4 @@ public:
     [[nodiscard]] auto from(const RuneDirection &source) -> RuneDirection;
 };
 
-
 #endif//FILTER_HPP
