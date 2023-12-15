@@ -5,32 +5,24 @@ set(CMAKE_CXX_STANDARD 17)
 
 include(FetchContent)
 
-FetchContent_Declare(yml
-        GIT_REPOSITORY https://github.moeyy.xyz/https://github.com/jbeder/yaml-cpp
-        #        GIT_SHALLOW FALSE  # ensure submodules are checked out
-)
-FetchContent_MakeAvailable(yml)
-
 find_package(OpenCV REQUIRED)
 
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/Interfaces.hpp
-        src/detector/Alias.hpp
-        src/detector/Sample.cpp
-        src/detector/Sample.hpp
-        src/detector/FeatureMatch.cpp
-        src/detector/FeatureMatch.hpp
-        src/detector/Detector.cpp
-        src/detector/Detector.hpp
-        src/filter/Converter.cpp
-        src/filter/Converter.hpp
+        src/RuneRecognizer/RuneRecognizer.cpp
+        src/RuneRecognizer/RuneRecognizer.hpp
+        src/RuneRecognizer/Feature.cpp
+        src/RuneRecognizer/Feature.hpp
+        src/RuneRecognizer/Matches.cpp
+        src/RuneRecognizer/Matches.hpp
+        src/Converter/Converter.cpp
+        src/Converter/Converter.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}
         ${OpenCV_LIBS}
-        YAML_CPP
 )
 
 # Test
@@ -41,18 +33,32 @@ FetchContent_Declare(googletest
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
-add_executable(DetectorTest
-        test/DetectorTest.cpp
-        src/detector/Sample.cpp
-        src/detector/Sample.hpp
-        src/detector/FeatureMatch.cpp
-        src/detector/FeatureMatch.hpp
-        src/detector/Detector.cpp
-        src/detector/Detector.hpp
+add_executable(RuneRecognizerTest
+        test/RuneRecognizer/RuneRecognizerTest.cpp
+        src/Interfaces.hpp
+        src/RuneRecognizer/RuneRecognizer.cpp
+        src/RuneRecognizer/RuneRecognizer.hpp
+        src/RuneRecognizer/Feature.cpp
+        src/RuneRecognizer/Feature.hpp
+        src/RuneRecognizer/Matches.cpp
+        src/RuneRecognizer/Matches.hpp
+
 )
-target_link_libraries(
-        DetectorTest
+target_link_libraries(RuneRecognizerTest
         ${OpenCV_LIBS}
         GTest::gtest_main
 )
-gtest_discover_tests(DetectorTest)
+
+add_executable(ConverterTest
+        test/Converter/ConverterTest.cpp
+        src/Converter/Converter.cpp
+        src/Converter/Converter.hpp
+)
+target_link_libraries(ConverterTest
+        ${OpenCV_LIBS}
+        GTest::gtest_main
+)
+gtest_discover_tests(
+        ConverterTest
+        RuneRecognizerTest
+)

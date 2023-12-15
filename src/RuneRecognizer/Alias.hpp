@@ -8,4 +8,5 @@ using Descriptors = cv::Mat;
 using Transform   = cv::Mat;
 using Image       = cv::Mat;
 
+
 #endif// ALIAS_HPP
