@@ -5,12 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 
 include(FetchContent)
 
-FetchContent_Declare(yml
-        GIT_REPOSITORY https://github.moeyy.xyz/https://github.com/jbeder/yaml-cpp
-        #        GIT_SHALLOW FALSE  # ensure submodules are checked out
-)
-FetchContent_MakeAvailable(yml)
-
 find_package(OpenCV REQUIRED)
 
 
@@ -29,7 +23,6 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
         ${OpenCV_LIBS}
-        YAML_CPP
 )
 
 # Test
@@ -40,7 +33,7 @@ FetchContent_Declare(googletest
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
-add_executable(RuneRecognizer
+add_executable(RuneRecognizerTest
         test/RuneRecognizer/RuneRecognizerTest.cpp
         src/Interfaces.hpp
         src/RuneRecognizer/RuneRecognizer.cpp
@@ -51,9 +44,21 @@ add_executable(RuneRecognizer
         src/RuneRecognizer/Matches.hpp
 
 )
-target_link_libraries(
-        RuneRecognizer
+target_link_libraries(RuneRecognizerTest
         ${OpenCV_LIBS}
         GTest::gtest_main
 )
-gtest_discover_tests(RuneRecognizer)
+
+add_executable(ConverterTest
+        test/Converter/ConverterTest.cpp
+        src/Converter/Converter.cpp
+        src/Converter/Converter.hpp
+)
+target_link_libraries(ConverterTest
+        ${OpenCV_LIBS}
+        GTest::gtest_main
+)
+gtest_discover_tests(
+        ConverterTest
+        RuneRecognizerTest
+)

@@ -18,11 +18,11 @@ class AbsoluteDirectionConverter {
     /**
      * @brief 最大历史记录数。
      */
-    constexpr int         maxHistory = 30;
+    const int  maxHistory = 30;
     /**
      * @brief 中心点队列。
      */
-    std::queue<Direction> centres{};
+    std::deque<Direction> centres{};
 
     /**
      * @brief 计算方向的平均值。

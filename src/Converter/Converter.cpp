@@ -33,16 +33,18 @@ std::optional<Rune<Direction>> AbsoluteDirectionConverter::convertToVehicle(cons
     const Direction target = source.target - gimbal;// 计算目标方向
     const Direction centre = source.centre - gimbal;// 计算中心方向
 
-    centres.push(centre);// 将中心方向添加到中心点列表
+    centres.push_back(centre);// 将中心方向添加到中心点列表
     if (centres.size() > maxHistory)
-        centres.pop();// 如果中心点列表过大，则移除最旧的一个方向
+        centres.pop_front();// 如果中心点列表过大，则移除最旧的一个方向
 
-    const auto   averageDirection = average();                                                                                // 计算平均方向
-    const double deviation        = pow(centre.pitch - averageDirection.pitch, 2) + pow(centre.yaw - averageDirection.yaw, 2);// 计算中心方向与平均方向的偏差
+    const auto   averageDirection = average();// 计算平均方向
+    const double deviation =
+            (centre.pitch - averageDirection.pitch) * (centre.pitch - averageDirection.pitch) +
+            (centre.yaw - averageDirection.yaw) * (centre.yaw - averageDirection.yaw);// 计算中心方向与平均方向的偏差
 
     if (deviation > 9 * variance()) // 如果偏差超过允许范围，则返回空
         return nullopt;
     
-    return Rune{target, averageDirection}; // 返回转换后的方向
+    return Rune<Direction>{target, averageDirection}; // 返回转换后的方向
 }
 
