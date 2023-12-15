@@ -23,7 +23,8 @@ add_executable(${PROJECT_NAME}
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.cpp
         src/RuneRecognizer/Matches.hpp
-        src/filter/Converter.cpp
+        src/Converter/Converter.cpp
+        src/Converter/Converter.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}

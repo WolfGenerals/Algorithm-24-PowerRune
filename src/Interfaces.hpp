@@ -12,8 +12,6 @@ struct Direction {
 
     [[nodiscard]] auto operator+(const Direction &other) const -> Direction { return {pitch + other.pitch, yaw + other.yaw}; }
     [[nodiscard]] auto operator-(const Direction &other) const -> Direction { return {pitch - other.pitch, yaw - other.yaw}; }
-    [[nodiscard]] auto distance2() const -> double { return pow(pitch, 2) + pow(yaw, 2); }
-    [[nodiscard]] auto distance() const -> double { return sqrt(distance2()); }
 };
 
 template<typename T>
