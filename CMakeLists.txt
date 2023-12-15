@@ -19,6 +19,10 @@ add_executable(${PROJECT_NAME}
         src/RuneRecognizer/Matches.hpp
         src/Converter/Converter.cpp
         src/Converter/Converter.hpp
+        src/prediction/pre_bullet.cpp
+        src/prediction/pre_bullet.h
+        src/prediction/pre_for_small.cpp
+        src/prediction/pre_for_small.h
 )
 
 target_link_libraries(${PROJECT_NAME}
