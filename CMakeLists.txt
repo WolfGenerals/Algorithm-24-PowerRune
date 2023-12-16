@@ -23,6 +23,8 @@ add_executable(${PROJECT_NAME}
         src/prediction/pre_bullet.h
         src/prediction/pre_for_small.cpp
         src/prediction/pre_for_small.h
+        src/Stabilizer.cpp
+        src/Stabilizer.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}
