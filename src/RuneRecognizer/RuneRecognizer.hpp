@@ -36,7 +36,7 @@ public:
      * @param image 用于识别的相机图像
      * @return 如果成功识别符文，则返回识别的符文位置的std::optional对象，否则返回std::nullopt
      */
-    [[nodiscard]] auto fromCamera(const Image& image) const -> std::optional<Rune<cv::Point2f>>;
+    [[nodiscard]] auto fromCamera(const Image& image) const -> std::optional<Rune<Direction>>;
 };
 
 #endif//API_HPP
