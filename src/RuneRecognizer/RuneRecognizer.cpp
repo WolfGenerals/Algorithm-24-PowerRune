@@ -28,7 +28,7 @@ auto RuneRecognizer::fromCamera(const Image &image) const -> std::optional<Rune<
     auto &target = untransformedPoints[0];
     auto &centre = untransformedPoints[1];
     // 返回检测到的符文位置
-    return Rune<Direction>{{atan2(target.y-image.rows/2,focalLength),-atan2(target.x-image.cols/2,focalLength)},
-        {atan2(centre.y-image.rows/2,focalLength),-atan2(centre.x-image.cols/2,focalLength)}};
+    return Rune<Direction>{{atan2(target.y - image.rows / 2, focalLength), -atan2(target.x - image.cols / 2, focalLength)},
+                           {atan2(centre.y - image.rows / 2, focalLength),-atan2(centre.x-image.cols/2,focalLength)}};
 }
 

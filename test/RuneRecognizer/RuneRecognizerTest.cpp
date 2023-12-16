@@ -18,7 +18,7 @@ TEST(RuneRecognizerTest, 有特征点的图像_返回非空值) {
 
     const Feature        sampleFeature = Feature::of(image);
     const Rune<Point2f>  sampleRune    = {Point{0, 0}, Point{1, 1}};
-    const RuneRecognizer runeRecognizer{sampleFeature, sampleRune,1};
+    const RuneRecognizer runeRecognizer{sampleFeature, sampleRune, 1};
 
     // Act
     const auto result = runeRecognizer.fromCamera(image);
