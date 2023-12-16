@@ -11,6 +11,11 @@ const Ptr<Feature2D> detector = ORB::create(500, 2, 1, 31, 0, 2, ORB::HARRIS_SCO
 
 // 定义Feature类的of函数，接收一个Image类型的参数并返回一个Feature类型的值
 auto Feature::of(const Image &image) -> Feature {
+    if (image.empty())
+        throw runtime_error("图像为空");
+    if (image.channels()!= 1)
+        throw runtime_error("图片必须是灰度图");
+
     vector<KeyPoint> keyPoints;
     Descriptors      descriptors;
 

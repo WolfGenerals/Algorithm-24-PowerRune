@@ -25,8 +25,12 @@ public:
     /**
      * @brief 用于识别的样本符文
      */
-    const Rune<cv::Point2f>& sampleRune;
+    const Rune<cv::Point2f> &sampleRune;
 
+    /**
+     *@brief 镜头焦距（像素）
+     */
+    const double       focalLength;
     /**
      * @brief 从相机图像中识别符文
      * @param image 用于识别的相机图像

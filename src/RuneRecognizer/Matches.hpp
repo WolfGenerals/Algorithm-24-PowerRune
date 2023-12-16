@@ -27,7 +27,7 @@ struct Matches {
      * \param actual 实际特征
      * \return 两个特征间的匹配关系
      */
-    static auto between(const Feature &reference, const Feature &actual) -> Matches;
+    [[nodiscard]]static auto between(const Feature &reference, const Feature &actual) -> Matches;
 
     /**
      * \brief 获取变换矩阵

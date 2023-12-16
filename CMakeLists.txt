@@ -46,6 +46,8 @@ add_executable(RuneRecognizerTest
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.cpp
         src/RuneRecognizer/Matches.hpp
+        test/RuneRecognizer/FeatureTest.cpp
+        test/RuneRecognizer/MatchesTest.cpp
 
 )
 target_link_libraries(RuneRecognizerTest
