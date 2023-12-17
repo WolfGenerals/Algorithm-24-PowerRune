@@ -1,6 +1,3 @@
-//
-// Created by mojiw on 2023/12/5.
-
 #ifndef FEATUREMATCH_HPP
 #define FEATUREMATCH_HPP
 

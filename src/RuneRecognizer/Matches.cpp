@@ -1,7 +1,3 @@
-//
-// Created by mojiw on 2023/12/11.
-//
-
 #include "Matches.hpp"
 
 using namespace std;

@@ -1,5 +1,3 @@
-//
-// Created by mojiw on 2023/12/11.
 
 #ifndef API_HPP
 #define API_HPP

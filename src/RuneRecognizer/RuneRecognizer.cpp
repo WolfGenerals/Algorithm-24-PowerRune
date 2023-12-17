@@ -1,7 +1,3 @@
-//
-// Created by mojiw on 2023/12/11.
-//
-
 #include "RuneRecognizer.hpp"
 #include "Feature.hpp"
 #include "Matches.hpp"

@@ -1,7 +1,3 @@
-//
-// Created by mojiw on 2023/12/10.
-//
-
 #ifndef FILTER_HPP
 #define FILTER_HPP
 #include "../Interfaces.hpp"

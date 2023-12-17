@@ -1,7 +1,3 @@
-//
-// Created by mojiw on 2023/12/5.
-//
-
 #include "Feature.hpp"
 
 using namespace std;
