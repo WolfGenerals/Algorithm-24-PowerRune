@@ -18,7 +18,7 @@ class StabilizedDouble {
     }
 
     void resetMask() {
-        mask.fill(true);
+        std::fill(mask, mask + historySize, true);
     }
     bool excludeErrorData() {
         bool changed = false;
@@ -72,7 +72,7 @@ public:
     }
 
     [[nodiscard]] operator double() const {// NOLINT(*-explicit-constructor)
-        return variance;
+        return average;
     }
 };
 

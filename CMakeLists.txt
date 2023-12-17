@@ -23,7 +23,6 @@ add_executable(${PROJECT_NAME}
         src/prediction/pre_bullet.h
         src/prediction/pre_for_small.cpp
         src/prediction/pre_for_small.h
-        src/Stabilizer.cpp
         src/Stabilizer.hpp
 )
 
@@ -66,7 +65,16 @@ target_link_libraries(ConverterTest
         ${OpenCV_LIBS}
         GTest::gtest_main
 )
+
+add_executable(StabilizedTest
+        test/StabilizerTest.cpp
+        src/Stabilizer.hpp
+)
+target_link_libraries(StabilizedTest
+        GTest::gtest_main
+)
 gtest_discover_tests(
         ConverterTest
         RuneRecognizerTest
+        StabilizedTest
 )
