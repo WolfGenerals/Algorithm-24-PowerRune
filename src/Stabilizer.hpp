@@ -1,76 +1,78 @@
-//
-// Created by mojiw on 2023/12/16.
-//
-
 #ifndef STABILIZER_HPP
 #define STABILIZER_HPP
-
+#include <list>
 
 template<int historySize>
 class StabilizedDouble {
-    double history[historySize] = {0};
-    int    index                = 0;
-    int    currentSize          = 0;
+    std::list<double> history{};
 
-    double current = 0.0;
+    bool   mask[historySize]{true};
+    double average  = 0.0;
+    double variance = 0.0;
 
-    void insert(double value) {
-        history[index] = value;
-        index          = (index + 1) % historySize;
-        if (currentSize < historySize)
-            currentSize++;
+
+    void insert(const double value) {
+        if (history.size() >= historySize)
+            history.pop_front();
+        history.push_back(value);
     }
 
-    double caculate() {
-        bool mask[historySize] = {false};
-        while (true) {
-            bool         changed    = false;
-            const double avr        = average(mask);
-            const double maxDeviate = 9 * variance(mask);
-            for (int i = 0; i < currentSize; i++) {
-                if (!mask[i])
-                    continue;
-                const double deviate = (history[i] - avr);
-                if (deviate * deviate > maxDeviate) {
-                    changed = true;
-                    mask[i] = false;
-                }
+    void resetMask() {
+        mask.fill(true);
+    }
+    bool excludeErrorData() {
+        bool changed = false;
+        int  index   = 0;
+        for (const double element: history) {
+            if (!mask[index])
+                continue;
+            if ((element - average) * (element - average) > 9 * variance) {
+                mask[index] = false;
+                changed     = true;
             }
-            if (!changed)
-                return avr;
         }
+        return changed;
     }
 
-    [[nodiscard]] double average(const bool *mask) const {
-        double sum = 0.0;
-        for (int i = 0; i < currentSize; i++) {
-            if (!mask[i])
+    [[nodiscard]] double computeAverage() const {
+        double sum   = 0.0;
+        int    index = 0;
+        for (const double element: history) {
+            if (!mask[index++])
                 continue;
-            sum += history[i];
+            sum += element;
         }
-        return sum / currentSize;
+        return sum / index;
     }
 
-    [[nodiscard]] double variance(const bool *mask) const {
-        double sum = 0.0;
-        for (int i = 0; i < currentSize; i++) {
-            if (!mask[i])
+    [[nodiscard]] double computeVariance() const {
+        double sum   = 0.0;
+        int    index = 0;
+        for (const double element: history) {
+            if (!mask[index++])
                 continue;
-            const double deviate = (history[i] - average());
-            sum += deviate * deviate;
+            const double diff = element - average;
+            sum += diff * diff;
         }
-        return sum / currentSize;
+        return sum / index;
     }
 
 public:
-    StabilizedDouble &operator=(double value) {
+    StabilizedDouble &operator=(const double value) {
         insert(value);
-        current = caculate();
+        resetMask();
+        bool hasError;
+        do {
+            average  = computeAverage();
+            variance = computeVariance();
+            hasError = excludeErrorData();
+        } while (hasError);
+
         return *this;
     }
 
     [[nodiscard]] operator double() const {// NOLINT(*-explicit-constructor)
-        return current;
+        return variance;
     }
 };
 
