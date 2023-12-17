@@ -13,10 +13,18 @@
  * @class AbsoluteDirectionConverter
  * @brief 用于给定符在云台坐标系的方向转换至车体坐标系。
  */
-template<int historySize>
 class AbsoluteDirectionConverter {
-    StabilizedDouble<historySize> centerPitch;
-    StabilizedDouble<historySize> centerYaw;
+    int    historySize;
+    double excludedThreshold;
+
+public:
+    explicit AbsoluteDirectionConverter(const int historySize=10, const double excludedThreshold=3)
+        : historySize(historySize),
+          excludedThreshold(excludedThreshold) {}
+
+private:
+    StabilizedDouble centerPitch{historySize, excludedThreshold};
+    StabilizedDouble centerYaw{historySize, excludedThreshold};
 
 public:
     /**

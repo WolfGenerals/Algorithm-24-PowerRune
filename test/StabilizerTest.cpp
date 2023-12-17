@@ -2,20 +2,20 @@
 #include <gtest/gtest.h>
 
 TEST(StabilizerDoubleTest, OneData) {
-    StabilizedDouble<1> stabilizer;
+    StabilizedDouble stabilizer{};
     stabilizer = 1.0;
     ASSERT_EQ(stabilizer, 1.0);
 }
 
 TEST(StabilizerDoubleTest, TwoData) {
-    StabilizedDouble<10> stabilizer;
+    StabilizedDouble stabilizer{};
     stabilizer = 1.0;
     stabilizer = 2.0;
     ASSERT_EQ(stabilizer, 1.5);
 }
 
 TEST(StabilizerDoubleTest, FullData) {
-    StabilizedDouble<10> stabilizer;
+    StabilizedDouble stabilizer{};
     for (int i = 0; i < 20; ++i) {
         stabilizer = i;
     }
@@ -23,7 +23,7 @@ TEST(StabilizerDoubleTest, FullData) {
 }
 
 TEST(StabilizerDoubleTest, ErrorData) {
-    StabilizedDouble<50> stabilizer;
+    StabilizedDouble stabilizer{50};
     for (int i = 0; i < 150; ++i) {
         stabilizer = 5;
     }

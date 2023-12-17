@@ -1,8 +1,8 @@
 #include "../../src/Converter/Converter.hpp"
 #include <gtest/gtest.h>
 TEST(AbsoluteDirectionConverterTest, ReturnsOptionalEmptyIfSourceBad) {// Arrange
-    AbsoluteDirectionConverter<500> converter;
-    for (int i = 0; i < 600; ++i) {
+    AbsoluteDirectionConverter converter{50};
+    for (int i = 0; i < 100; ++i) {
         // ReSharper disable once CppNoDiscardExpression// ReSharper disable once CppNoDiscardExpression
         converter.convertToVehicle({0, 0, 1, 1});
     }
@@ -18,7 +18,7 @@ TEST(AbsoluteDirectionConverterTest, ReturnsOptionalEmptyIfSourceBad) {// Arrang
 
 TEST(AbsoluteDirectionConverterTest, ReturnsCorrectConversionWhenSourceGood) {
     // Arrange
-    AbsoluteDirectionConverter<50> converter;
+    AbsoluteDirectionConverter converter;
     for (int i = 0; i < 60; ++i) {
         // ReSharper disable once CppNoDiscardExpression// ReSharper disable once CppNoDiscardExpression
         converter.convertToVehicle({0, 0, 1, 1});
@@ -37,7 +37,7 @@ TEST(AbsoluteDirectionConverterTest, ReturnsCorrectConversionWhenSourceGood) {
 }
 TEST(AbsoluteDirectionConverterTest, ReturnsCorrectConversionWithRotation) {
     // Arrange
-    AbsoluteDirectionConverter<50> converter;
+    AbsoluteDirectionConverter converter;
     for (int i = 0; i < 60; ++i) {
         // ReSharper disable once CppNoDiscardExpression// ReSharper disable once CppNoDiscardExpression
         converter.convertToVehicle({0, 0, 1, 1});

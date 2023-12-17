@@ -2,33 +2,46 @@
 #define STABILIZER_HPP
 #include <list>
 
-template<int historySize>
 class StabilizedDouble {
-    std::list<double> history{};
+    struct Node {
+        double value;
+        bool   excluded = false;
+    };
 
-    bool   mask[historySize]{true};
+
+    std::list<Node> history{};
+
     double average  = 0.0;
     double variance = 0.0;
 
+    int    historySize;
+    double excludedThreshold;
 
+public:
+    explicit StabilizedDouble(const int historySize = 10, const double excludedThreshold = 3)
+        : historySize(historySize),
+          excludedThreshold(excludedThreshold) {}
+
+private:
     void insert(const double value) {
         if (history.size() >= historySize)
             history.pop_front();
-        history.push_back(value);
+        history.push_back({value});
     }
 
-    void resetMask() {
-        std::fill(mask, mask + historySize, true);
+
+    [[nodiscard]] bool valid(const double value) const {
+        return (value - average) * (value - average) <= variance * excludedThreshold * excludedThreshold;
     }
+
     bool excludeErrorData() {
         bool changed = false;
-        int  index   = 0;
-        for (const double element: history) {
-            if (!mask[index])
+        for (auto &[value, excluded]: history) {
+            if (excluded)
                 continue;
-            if ((element - average) * (element - average) > 9 * variance) {
-                mask[index] = false;
-                changed     = true;
+            if (!valid(value)) {
+                excluded = true;
+                changed  = true;
             }
         }
         return changed;
@@ -36,31 +49,31 @@ class StabilizedDouble {
 
     [[nodiscard]] double computeAverage() const {
         double sum   = 0.0;
-        int    index = 0;
-        for (const double element: history) {
-            if (!mask[index++])
+        int    count = 0;
+        for (const auto &[value, excluded]: history) {
+            if (excluded)
                 continue;
-            sum += element;
+            sum += value;
+            count++;
         }
-        return sum / index;
+        return sum / count;
     }
 
     [[nodiscard]] double computeVariance() const {
         double sum   = 0.0;
-        int    index = 0;
-        for (const double element: history) {
-            if (!mask[index++])
+        int    count = 0;
+        for (const auto &[value, excluded]: history) {
+            if (excluded)
                 continue;
-            const double diff = element - average;
-            sum += diff * diff;
+            sum += value * value;
+            count++;
         }
-        return sum / index;
+        return sum / count - average * average;
     }
 
 public:
     StabilizedDouble &operator=(const double value) {
         insert(value);
-        resetMask();
         bool hasError;
         do {
             average  = computeAverage();
@@ -76,7 +89,7 @@ public:
     }
 
     [[nodiscard]] bool valid() const {
-        return history.back() - average * 9 < variance;
+        return valid(history.back().value);
     }
 };
 
