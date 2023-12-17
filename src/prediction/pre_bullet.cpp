@@ -3,11 +3,7 @@
 using std::cos;
 using std::sin;
 using std::tan;
-struct Para {
-  double m = 0.5, x = 10, y = 5;
-  const double g = 9.8, k = 2, v0 = 20, pi = 3.14159, lr = 10;
-  double g_divide_v0 = g / v0;
-} para;
+Para para;
 
 double f(double alpha) {
   double ans;
