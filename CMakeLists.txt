@@ -17,7 +17,6 @@ add_executable(${PROJECT_NAME}
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.cpp
         src/RuneRecognizer/Matches.hpp
-        src/Converter/Converter.cpp
         src/Converter/Converter.hpp
         src/prediction/pre_bullet.cpp
         src/prediction/pre_bullet.h
@@ -58,7 +57,6 @@ target_link_libraries(RuneRecognizerTest
 
 add_executable(ConverterTest
         test/Converter/ConverterTest.cpp
-        src/Converter/Converter.cpp
         src/Converter/Converter.hpp
 )
 target_link_libraries(ConverterTest

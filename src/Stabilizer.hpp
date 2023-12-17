@@ -74,6 +74,10 @@ public:
     [[nodiscard]] operator double() const {// NOLINT(*-explicit-constructor)
         return average;
     }
+
+    [[nodiscard]] bool valid() const {
+        return history.back() - average * 9 < variance;
+    }
 };
 
 
