@@ -7,33 +7,24 @@
 #include "../Interfaces.hpp"
 
 
+#include "../Stabilizer.hpp"
 #include <optional>
-#include <queue>
-
 /**
  * @class AbsoluteDirectionConverter
  * @brief 用于给定符在云台坐标系的方向转换至车体坐标系。
  */
 class AbsoluteDirectionConverter {
-    /**
-     * @brief 最大历史记录数。
-     */
-    const int  maxHistory = 30;
-    /**
-     * @brief 中心点队列。
-     */
-    std::deque<Direction> centres{};
+    int    historySize;
+    double excludedThreshold;
 
-    /**
-     * @brief 计算方向的平均值。
-     * @return 平均方向。
-     */
-    [[nodiscard]] Direction average() const;
-    /**
-     * @brief 计算方向的方差。
-     * @return 方向的方差。
-     */
-    [[nodiscard]] double    variance() const;
+public:
+    explicit AbsoluteDirectionConverter(const int historySize=10, const double excludedThreshold=3)
+        : historySize(historySize),
+          excludedThreshold(excludedThreshold) {}
+
+private:
+    StabilizedDouble centerPitch{historySize, excludedThreshold};
+    StabilizedDouble centerYaw{historySize, excludedThreshold};
 
 public:
     /**
@@ -46,7 +37,15 @@ public:
      * @param source 云台坐标系的符。
      * @return 转换后的符，如果偏差超出可接受范围则返回空。
      */
-    [[nodiscard]] std::optional<Rune<Direction>> convertToVehicle(const Rune<Direction> &source);
+    [[nodiscard]] std::optional<Rune<Direction>> convertToVehicle(const Rune<Direction> &source) {
+        centerPitch = source.centre.pitch - gimbal.pitch;
+        centerYaw   = source.centre.yaw - gimbal.yaw;
+
+        if (!centerPitch.valid() || !centerYaw.valid())
+            return std::nullopt;
+
+        return Rune<Direction>{source.target - gimbal, {centerPitch, centerYaw}};
+    };
 };
 
 #endif//FILTER_HPP

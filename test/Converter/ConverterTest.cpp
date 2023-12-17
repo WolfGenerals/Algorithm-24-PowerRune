@@ -1,13 +1,13 @@
 #include "../../src/Converter/Converter.hpp"
 #include <gtest/gtest.h>
 TEST(AbsoluteDirectionConverterTest, ReturnsOptionalEmptyIfSourceBad) {// Arrange
-    AbsoluteDirectionConverter converter;
-    for (int i = 0; i < 60; ++i) {
+    AbsoluteDirectionConverter converter{50};
+    for (int i = 0; i < 100; ++i) {
         // ReSharper disable once CppNoDiscardExpression// ReSharper disable once CppNoDiscardExpression
         converter.convertToVehicle({0, 0, 1, 1});
     }
 
-    constexpr Rune<Direction> source{{0, 0}, {6, 8}};// nullptr
+    constexpr Rune<Direction> source{{0, 0}, {10, 10}};// nullptr
 
     // Act
     const auto result = converter.convertToVehicle(source);

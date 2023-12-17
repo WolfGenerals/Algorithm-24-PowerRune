@@ -17,12 +17,12 @@ add_executable(${PROJECT_NAME}
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.cpp
         src/RuneRecognizer/Matches.hpp
-        src/Converter/Converter.cpp
         src/Converter/Converter.hpp
         src/prediction/pre_bullet.cpp
         src/prediction/pre_bullet.h
         src/prediction/pre_for_small.cpp
         src/prediction/pre_for_small.h
+        src/Stabilizer.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -57,14 +57,22 @@ target_link_libraries(RuneRecognizerTest
 
 add_executable(ConverterTest
         test/Converter/ConverterTest.cpp
-        src/Converter/Converter.cpp
         src/Converter/Converter.hpp
 )
 target_link_libraries(ConverterTest
         ${OpenCV_LIBS}
         GTest::gtest_main
 )
+
+add_executable(StabilizedTest
+        test/StabilizerTest.cpp
+        src/Stabilizer.hpp
+)
+target_link_libraries(StabilizedTest
+        GTest::gtest_main
+)
 gtest_discover_tests(
         ConverterTest
         RuneRecognizerTest
+        StabilizedTest
 )
