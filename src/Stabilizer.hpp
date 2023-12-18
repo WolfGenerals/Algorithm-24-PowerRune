@@ -31,7 +31,7 @@ private:
 
 
     [[nodiscard]] bool valid(const double value) const {
-        return (value - average) * (value - average) <= variance * excludedThreshold * excludedThreshold;
+        return (value - average) * (value - average) <= variance * excludedThreshold * excludedThreshold+1/*消除浮点数计算误差带来的影响*/;
     }
 
     bool excludeErrorData() {
@@ -75,6 +75,8 @@ public:
     StabilizedDouble &operator=(const double value) {
         insert(value);
         bool hasError;
+        for (auto && node : history)
+            node.excluded = false;
         do {
             average  = computeAverage();
             variance = computeVariance();

@@ -11,18 +11,18 @@ find_package(OpenCV REQUIRED)
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/Interfaces.hpp
-        src/RuneRecognizer/RuneRecognizer.cpp
         src/RuneRecognizer/RuneRecognizer.hpp
         src/RuneRecognizer/Feature.cpp
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.cpp
         src/RuneRecognizer/Matches.hpp
-        src/Converter/Converter.hpp
+        src/Converter/PixelToDirection.hpp
         src/prediction/pre_bullet.cpp
         src/prediction/pre_bullet.h
         src/prediction/pre_for_small.cpp
         src/prediction/pre_for_small.h
         src/Stabilizer.hpp
+        src/Converter/Plane.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -40,7 +40,6 @@ include(GoogleTest)
 add_executable(RuneRecognizerTest
         test/RuneRecognizer/RuneRecognizerTest.cpp
         src/Interfaces.hpp
-        src/RuneRecognizer/RuneRecognizer.cpp
         src/RuneRecognizer/RuneRecognizer.hpp
         src/RuneRecognizer/Feature.cpp
         src/RuneRecognizer/Feature.hpp
@@ -57,7 +56,7 @@ target_link_libraries(RuneRecognizerTest
 
 add_executable(ConverterTest
         test/Converter/ConverterTest.cpp
-        src/Converter/Converter.hpp
+        src/Converter/PixelToDirection.hpp
 )
 target_link_libraries(ConverterTest
         ${OpenCV_LIBS}

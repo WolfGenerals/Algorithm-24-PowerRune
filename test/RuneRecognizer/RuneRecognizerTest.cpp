@@ -18,7 +18,7 @@ TEST(RuneRecognizerTest, 有特征点的图像_返回非空值) {
 
     const Feature        sampleFeature = Feature::of(image);
     const Rune<Point2f>  sampleRune    = {Point{0, 0}, Point{1, 1}};
-    const RuneRecognizer runeRecognizer{sampleFeature, sampleRune, 1};
+    const RuneRecognizer runeRecognizer{sampleFeature, sampleRune};
 
     // Act
     const auto result = runeRecognizer.fromCamera(image);
@@ -40,7 +40,7 @@ TEST(RuneRecognizerTest, 无特征点的图像_返回空值) {
 
     const Feature       sampleFeature = Feature::of(image);
     const Rune<Point2f> sampleRune    = {Point{0, 0}, Point{1, 1}};
-    RuneRecognizer      runeRecognizer{sampleFeature, sampleRune,1};
+    RuneRecognizer      runeRecognizer{sampleFeature, sampleRune};
 
     // Act
     auto result = runeRecognizer.fromCamera(empty);
@@ -62,7 +62,7 @@ TEST(RuneRecognizerTest, 错误的通道数量_抛出异常) {
 
 
     const Feature        sampleFeature = Feature::of(image);
-    const Rune<Point2f>  sampleRune    = {Point{0, 0}, Point{1, 1},1};
+    const Rune<Point2f>  sampleRune    = {Point{0, 0}, Point{1, 1}};
     const RuneRecognizer runeRecognizer{sampleFeature, sampleRune};
 
     // Act
@@ -82,7 +82,7 @@ TEST(RuneRecognizerTest, 空图像_抛出异常) {
 
 
     const Feature        sampleFeature = Feature::of(image);
-    const Rune<Point2f>  sampleRune    = {Point{0, 0}, Point{1, 1},1};
+    const Rune<Point2f>  sampleRune    = {Point{0, 0}, Point{1, 1}};
     const RuneRecognizer runeRecognizer{sampleFeature, sampleRune};
 
     // Act
