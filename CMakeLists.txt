@@ -22,7 +22,7 @@ add_executable(${PROJECT_NAME}
         src/prediction/pre_for_small.cpp
         src/prediction/pre_for_small.h
         src/Stabilizer.hpp
-        src/Converter/Plane.hpp
+        src/Converter/FitPlane.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}
