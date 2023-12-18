@@ -1,6 +1,6 @@
 #ifndef FILTER_HPP
 #define FILTER_HPP
-#include "../Interfaces.hpp"
+#include "..\Data.hpp"
 
 
 #include "../Stabilizer.hpp"

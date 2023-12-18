@@ -10,7 +10,7 @@ find_package(OpenCV REQUIRED)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
-        src/Interfaces.hpp
+        src/Data.hpp
         src/RuneRecognizer/RuneRecognizer.hpp
         src/RuneRecognizer/Feature.cpp
         src/RuneRecognizer/Feature.hpp
@@ -39,7 +39,7 @@ include(GoogleTest)
 
 add_executable(RuneRecognizerTest
         test/RuneRecognizer/RuneRecognizerTest.cpp
-        src/Interfaces.hpp
+        src/Data.hpp
         src/RuneRecognizer/RuneRecognizer.hpp
         src/RuneRecognizer/Feature.cpp
         src/RuneRecognizer/Feature.hpp
@@ -70,8 +70,18 @@ add_executable(StabilizedTest
 target_link_libraries(StabilizedTest
         GTest::gtest_main
 )
+
+add_executable(DataTest
+        test/DataTest.cpp
+        src/Data.hpp
+)
+target_link_libraries(DataTest
+        ${OpenCV_LIBS}
+        GTest::gtest_main
+)
 gtest_discover_tests(
         ConverterTest
         RuneRecognizerTest
         StabilizedTest
+        DataTest
 )

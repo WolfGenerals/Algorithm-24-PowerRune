@@ -20,15 +20,13 @@ struct Plane {
 
     [[nodiscard]] cv::Point2d intersect(Direction dir) const {
         return {
-            (distanse * std::cos(yaw + dir.yaw)),
-            (distanse * std::sin(yaw + dir.yaw))
-        };
+                (distanse * -std::tan(dir.yaw - yaw)),
+                (distanse / std::cos(dir.yaw - yaw) / std::tan(dir.pitch))};
     }
     [[nodiscard]] Direction direction(const cv::Point2d &point) const {
-        return {
-            std::atan2(point.y, point.x) - yaw,
-            std::atan2(point.y, point.x) - yaw
-        };
+        const double yaw_   = -std::atan2(point.x, distanse);
+        const double pitch_ = std::atan2(point.y, distanse/std::cos(yaw_));
+        return {pitch_, yaw_+yaw};
     }
 };
 template<typename T>
