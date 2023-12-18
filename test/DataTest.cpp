@@ -67,3 +67,10 @@ TEST(PlaneTest, Intersect) {
     EXPECT_DOUBLE_EQ(c.x, -1);
     EXPECT_DOUBLE_EQ(c.y, sqrt(2));
 }
+TEST(PlaneTest, Direction) {
+    Plane       a{1, 1};
+    cv::Point2d b{-1, sqrt(2)};
+    Direction   c = a.direction(b);
+    EXPECT_DOUBLE_EQ(c.pitch, M_PI_4);
+    EXPECT_DOUBLE_EQ(c.yaw, 1 + M_PI_4);
+}
