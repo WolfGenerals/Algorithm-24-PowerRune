@@ -1,6 +1,6 @@
 #ifndef FILTER_HPP
 #define FILTER_HPP
-#include "..\Data.hpp"
+#include "../Data.hpp"
 
 
 #include "../Stabilizer.hpp"
@@ -46,14 +46,7 @@ public:
         const Direction target = pointToDirection(source.target);
         const Direction centre = pointToDirection(source.centre);
 
-
-        centerPitch = centre.pitch;
-        centerYaw   = centre.yaw;
-
-        if (!centerPitch.valid() || !centerYaw.valid())
-            return std::nullopt;
-
-        return Rune<Direction>{target, {centerPitch, centerYaw}};
+        return Rune<Direction>{target, centre};
     };
 };
 

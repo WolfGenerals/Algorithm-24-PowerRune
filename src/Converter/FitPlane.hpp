@@ -1,7 +1,7 @@
 #ifndef FITPLANE_HPP
 #define FITPLANE_HPP
 #include "../Stabilizer.hpp"
-#include "..\Data.hpp"
+#include "../Data.hpp"
 
 #include <opencv2/core/types.hpp>
 

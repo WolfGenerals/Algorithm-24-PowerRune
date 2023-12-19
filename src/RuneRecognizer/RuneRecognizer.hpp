@@ -1,7 +1,7 @@
 
 #ifndef API_HPP
 #define API_HPP
-#include "..\Data.hpp"
+#include "../Data.hpp"
 #include "Alias.hpp"
 #include "Feature.hpp"
 #include "Matches.hpp"

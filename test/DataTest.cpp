@@ -1,6 +1,17 @@
 #include "../src/Data.hpp"
 #include "gtest/gtest.h"
 
+TEST(AngleTest, New) {
+    Angle a{1};
+    EXPECT_DOUBLE_EQ(a.radian, 1);
+    Angle b{1+M_PI};
+    EXPECT_DOUBLE_EQ(b.radian, M_PI + 1);
+    Angle c{1+2*M_PI};
+    EXPECT_DOUBLE_EQ(c.radian, 1);
+    Angle d{1-2*M_PI};
+    EXPECT_DOUBLE_EQ(d.radian, 1);
+}
+
 TEST(DirectionTest, New) {
     Direction a{1, 2};
     EXPECT_DOUBLE_EQ(a.pitch, 1);
@@ -10,7 +21,7 @@ TEST(DirectionTest, New) {
     EXPECT_DOUBLE_EQ(b.yaw, 2);
     auto c = Direction{3, 4};
     EXPECT_DOUBLE_EQ(c.pitch, 3);
-    EXPECT_DOUBLE_EQ(c.yaw, 4);
+    EXPECT_DOUBLE_EQ(c.yaw, Angle{4});
     Direction d{};
     EXPECT_DOUBLE_EQ(d.pitch, 0);
     EXPECT_DOUBLE_EQ(d.yaw, 0);
@@ -19,8 +30,8 @@ TEST(DirectionTest, Add) {
     Direction a{1, 2};
     Direction b{3, 4};
     Direction c = a + b;
-    EXPECT_DOUBLE_EQ(c.pitch, 4);
-    EXPECT_DOUBLE_EQ(c.yaw, 6);
+    EXPECT_DOUBLE_EQ(c.pitch, Angle{4});
+    EXPECT_DOUBLE_EQ(c.yaw, Angle{6});
 }
 
 TEST(DirectionTest, Sub) {
@@ -55,7 +66,7 @@ TEST(PlaneTest, New) {
     EXPECT_DOUBLE_EQ(b.yaw, 2);
     auto c = Plane{3, 4};
     EXPECT_DOUBLE_EQ(c.distanse, 3);
-    EXPECT_DOUBLE_EQ(c.yaw, 4);
+    EXPECT_DOUBLE_EQ(c.yaw, Angle{4});
     Plane d{};
     EXPECT_DOUBLE_EQ(d.distanse, 0);
     EXPECT_DOUBLE_EQ(d.yaw, 0);

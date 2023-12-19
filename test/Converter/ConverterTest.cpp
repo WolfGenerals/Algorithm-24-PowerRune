@@ -57,5 +57,5 @@ TEST(FitPlaneTest, ReturnsCorrectPlane) {
     const Rune<Direction> rune{Direction{0, std::atan2(radius, distance) + yaw_}, Direction{0, yaw_}};
     const auto [distanse, yaw] = fitPlane(rune);
     EXPECT_FLOAT_EQ(distanse, distance);
-    EXPECT_FLOAT_EQ(yaw, 5);
+    EXPECT_FLOAT_EQ(yaw, Angle{5});
 }
