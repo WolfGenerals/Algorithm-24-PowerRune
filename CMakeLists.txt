@@ -1,51 +1,34 @@
-cmake_minimum_required(VERSION 3.22)
-project(power-rune)
+cmake_minimum_required(VERSION 3.8)
+project(power_rune)
 
-set(CMAKE_CXX_STANDARD 17)
+if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif ()
 
-find_package(OpenCV REQUIRED)
-#find_package(ament_cmake REQUIRED)
-#find_package(rclcpp REQUIRED)
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
 
-
-add_executable(${PROJECT_NAME}
-        src/main.cpp
+include_directories(src)
+add_executable(Node
+        src/Node.cpp
+        src/Alias.hpp
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.hpp
         src/Converter/ConvertTo3D.hpp
-        src/Stabilizer.hpp
         src/prediction/Predictor.hpp
-        src/Alias.hpp
-        src/Node.hpp
+)
+target_include_directories(Node PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>)
+ament_target_dependencies(
+        Node
+        "rclcpp"
+        "std_msgs"
 )
 
-target_link_libraries(${PROJECT_NAME}
-        ${OpenCV_LIBS}
-)
-ament_target_dependencies(talker rclcpp std_msgs)
+install(TARGETS Node
+        DESTINATION lib/${PROJECT_NAME})
 
-install(TARGETS ${PROJECT_NAME})
-## Test
-#enable_testing()
-#FetchContent_Declare(googletest
-#        URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-#)
-#FetchContent_MakeAvailable(googletest)
-#include(GoogleTest)
-#
-#
-#add_executable(RuneRecognizerTest
-#        src/RuneRecognizer/Feature.hpp
-#        src/RuneRecognizer/Matches.hpp
-#        test/RuneRecognizer/FeatureTest.cpp
-#        test/RuneRecognizer/MatchesTest.cpp
-#
-#)
-#target_link_libraries(RuneRecognizerTest
-#        ${OpenCV_LIBS}
-#        GTest::gtest_main
-#)
-#
-#gtest_discover_tests(
-#        RuneRecognizerTest
-#)
+ament_package()
