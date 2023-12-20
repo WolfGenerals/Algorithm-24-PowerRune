@@ -3,11 +3,17 @@
 <package format="3">
     <name>power-rune</name>
     <version>0.0.0</version>
+    <maintainer email="TODO@TODO">TODO</maintainer>
+    <description>
+        The power-rune package
+    </description>
+    <license>TODO</license>
+
+    <depend>rclcpp</depend>
+    <depend>std_msgs</depend>
 
     <buildtool_depend>ament_cmake</buildtool_depend>
 
-    <test_depend>ament_lint_auto</test_depend>
-    <test_depend>ament_lint_common</test_depend>
 
     <export>
         <build_type>ament_cmake</build_type>
