@@ -10,20 +10,12 @@ find_package(OpenCV REQUIRED)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
-        src/Data.hpp
-        src/RuneRecognizer/RuneRecognizer.hpp
-        src/RuneRecognizer/Feature.cpp
         src/RuneRecognizer/Feature.hpp
-        src/RuneRecognizer/Matches.cpp
         src/RuneRecognizer/Matches.hpp
-        src/Converter/PixelToDirection.hpp
-        src/prediction/pre_bullet.cpp
-        src/prediction/pre_bullet.h
-        src/prediction/pre_for_small.cpp
-        src/prediction/pre_for_small.h
+        src/Converter/ConvertTo3D.hpp
         src/Stabilizer.hpp
-        src/Converter/FitPlane.hpp
         src/prediction/Predictor.hpp
+        src/Alias.hpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -39,12 +31,7 @@ FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
 add_executable(RuneRecognizerTest
-        test/RuneRecognizer/RuneRecognizerTest.cpp
-        src/Data.hpp
-        src/RuneRecognizer/RuneRecognizer.hpp
-        src/RuneRecognizer/Feature.cpp
         src/RuneRecognizer/Feature.hpp
-        src/RuneRecognizer/Matches.cpp
         src/RuneRecognizer/Matches.hpp
         test/RuneRecognizer/FeatureTest.cpp
         test/RuneRecognizer/MatchesTest.cpp
@@ -55,34 +42,6 @@ target_link_libraries(RuneRecognizerTest
         GTest::gtest_main
 )
 
-add_executable(ConverterTest
-        test/Converter/ConverterTest.cpp
-        src/Converter/PixelToDirection.hpp
-)
-target_link_libraries(ConverterTest
-        ${OpenCV_LIBS}
-        GTest::gtest_main
-)
-
-add_executable(StabilizedTest
-        test/StabilizerTest.cpp
-        src/Stabilizer.hpp
-)
-target_link_libraries(StabilizedTest
-        GTest::gtest_main
-)
-
-add_executable(DataTest
-        test/DataTest.cpp
-        src/Data.hpp
-)
-target_link_libraries(DataTest
-        ${OpenCV_LIBS}
-        GTest::gtest_main
-)
 gtest_discover_tests(
-        ConverterTest
         RuneRecognizerTest
-        StabilizedTest
-        DataTest
 )

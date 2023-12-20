@@ -3,9 +3,6 @@
 <package format="3">
     <name>power-rune</name>
     <version>0.0.0</version>
-    <description>TODO: Package description</description>
-    <maintainer email="2301146268@qq.com">wolfgenerals</maintainer>
-    <license>TODO: License declaration</license>
 
     <buildtool_depend>ament_cmake</buildtool_depend>
 

@@ -1,3 +1,4 @@
+#include "Alias.hpp"
 int main() {
-    return 0;
+    stdmsg return 0;
 }
