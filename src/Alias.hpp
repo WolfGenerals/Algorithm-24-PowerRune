@@ -4,8 +4,6 @@
 #include "opencv2/opencv.hpp"
 
 using Descriptors = cv::Mat;
-using Transform2D = cv::Matx<float, 3, 3>;
-using Transform3D = cv::Matx<float, 4, 4>;
 using Image       = cv::Mat;
 using Vec3        = cv::Matx<float, 3, 1>;
 using Vec2        = cv::Matx<float, 2, 1>;

@@ -41,29 +41,6 @@ struct Matches {
         // 返回好的匹配关系以及参考特征和实际特征
         return {reference, actual, move(goodMatch)};
     }
-
-    [[nodiscard]] auto transform() const -> std::optional<Transform2D> {
-        // 如果匹配关系数量小于4，则返回空
-        if (matches.size() < 4) return std::nullopt;
-
-        std::vector<Vec2> ref;// 存储参考特征点的坐标
-        std::vector<Vec2> act;// 存储实际特征点的坐标
-
-        // 遍历所有匹配关系，获取参考特征点和实际特征点的坐标
-        for (const cv::DMatch &match: matches) {
-            ref.push_back(reference.keyPoints[match.trainIdx].pt);
-            act.push_back(actual.keyPoints[match.queryIdx].pt);
-        }
-
-        // 使用findHomography函数，通过最小二乘法估计单应性矩阵
-        cv::Mat transform = findHomography(ref, act, cv::RANSAC);
-        // 如果单应性矩阵为空，则返回空
-        if ((transform).empty())
-            return std::nullopt;
-
-        // 返回旋转变换和平移向量
-        return transform;
-    }
 };
 
 

@@ -19,8 +19,6 @@ add_executable(main
         src/Alias.hpp
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.hpp
-        src/Converter/ConvertTo3D.hpp
-        src/prediction/Predictor.hpp
 )
 target_include_directories(main PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
