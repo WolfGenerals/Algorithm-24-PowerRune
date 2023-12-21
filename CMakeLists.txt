@@ -16,7 +16,7 @@ find_package(OpenCV REQUIRED)
 
 include_directories(src)
 add_executable(Node
-        src/Node.cpp
+        src/PowerRuneNode.cpp
         src/Alias.hpp
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.hpp
@@ -37,6 +37,8 @@ ament_target_dependencies(
 )
 
 install(TARGETS Node
+        DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY temp
         DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
