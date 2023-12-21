@@ -14,8 +14,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 
-include_directories(src)
-add_executable(Node
+add_executable(main
         src/PowerRuneNode.cpp
         src/Alias.hpp
         src/RuneRecognizer/Feature.hpp
@@ -23,11 +22,12 @@ add_executable(Node
         src/Converter/ConvertTo3D.hpp
         src/prediction/Predictor.hpp
 )
-target_include_directories(Node PUBLIC
+target_include_directories(main PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
+
 ament_target_dependencies(
-        Node
+        main
         "rclcpp"
         "std_msgs"
         "sensor_msgs"
@@ -36,9 +36,23 @@ ament_target_dependencies(
         "OpenCV"
 )
 
-install(TARGETS Node
+install(TARGETS main
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY temp
         DESTINATION lib/${PROJECT_NAME})
+
+add_executable(video
+        src/TestVideo.cpp
+)
+ament_target_dependencies(
+        video
+        "rclcpp"
+        "sensor_msgs"
+        "cv_bridge"
+        "OpenCV"
+)
+install(TARGETS video
+        DESTINATION lib/${PROJECT_NAME})
+
 
 ament_package()
