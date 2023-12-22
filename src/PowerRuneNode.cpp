@@ -5,7 +5,6 @@
 #include "geometry_msgs/msg/polygon_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
-#include "sensor_msgs/msg/camera_info.hpp"
 
 using namespace std;
 using namespace rclcpp;
@@ -45,6 +44,13 @@ class PowerRuneNode final : public Node {
             cameraMatrix,
             distCoeffs
         );
+
+        Image showImage=image->image.clone();
+        drawKeypoints(showImage, feature.keyPoints, showImage);
+        for (auto && imagePoint : imagePoints)
+            circle(showImage, {static_cast<int>(imagePoint(0)), static_cast<int>(imagePoint(1))}, 5, cv::Scalar(255, 255, 0), -1);
+        imshow("showImage", showImage);
+        cv::waitKey(1);
 
         geometry_msgs::msg::PolygonStamped polygon_msg;
         for (const Vec3& point: sourceWorldPoints) {
@@ -86,7 +92,7 @@ public:
         Vec2 imageSize{static_cast<float>(image.cols), static_cast<float>(image.rows)};
 
         sourceImagePoints = {
-                    // {imageSize(0) * 0.54f, imageSize(1) * 0.18f},
+                    {imageSize(0) * 0.54f, imageSize(1) * 0.18f},
                     {imageSize(0) * 0.25f, imageSize(1) * 0.6f},
                     {imageSize(0) * 0.25f, imageSize(1) * 0.85f},
                     {imageSize(0) * 0.5f, imageSize(1) * 0.73f},
@@ -94,7 +100,7 @@ public:
                     {imageSize(0) * 0.75f, imageSize(1) * 0.6f}
                 };
         sourceWorldPoints = {
-                    // {0.0f, 0.0f, 0.0f},
+                    {0.0f, 0.0f, 0.0f},
                     {0.0f, 0.16f, 0.54f},
                     {0.0f, 0.16f, 0.86f},
                     {0.0f, 0.0f, 0.7f},
