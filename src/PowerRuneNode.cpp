@@ -134,7 +134,6 @@ public:
             "prediction_in_camera",
             10
         );
-        declare_parameter()
     }
 
     void init() {
@@ -147,8 +146,6 @@ public:
         cvtColor(image, image, cv::COLOR_BGR2GRAY);
         sourceFeature = std::make_shared<Feature>(Feature::of(image));
         Vec2 imageSize{static_cast<float>(image.cols), static_cast<float>(image.rows)};
-
-
 
         sourceImagePoints = {
                     {imageSize(0) * 0.54f, imageSize(1) * 0.18f},
