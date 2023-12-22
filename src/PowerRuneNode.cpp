@@ -12,20 +12,29 @@ using namespace rclcpp;
 
 
 class PowerRuneNode final : public Node {
-    shared_ptr<Feature>   sourceFeature;
-    std::vector<Vec3>     sourceWorldPoints;
-    std::vector<Vec2>     sourceImagePoints;
+    shared_ptr<Feature> sourceFeature;
+    std::vector<Vec3>   sourceWorldPoints;
+    std::vector<Vec2>   sourceImagePoints;
+
+
+
+
+
+   deque<double> targetDistance;
+   deque<double> centerDistance;
+   deque<double> predictionDistance;
+
     cv::Matx33f           cameraMatrix;
     cv::Matx<float, 1, 5> distCoeffs;
 
 
     Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr rune_in_camera_publisher;
-    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr center_in_camera_publisher;
-    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr rune_center_in_camera_publisher;
-    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr end_in_camera_publisher;
+    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr   center_in_camera_publisher;
+    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr   target_in_camera_publisher;
+    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr   prediction_in_camera_publisher;
     Subscription<sensor_msgs::msg::Image>::SharedPtr         image_subscriber;
 
-    void main(const sensor_msgs::msg::Image::SharedPtr& imageRos) const {
+    void main(const sensor_msgs::msg::Image::SharedPtr& imageRos) {
         const cv_bridge::CvImageConstPtr image = cv_bridge::toCvShare(imageRos);
         if (image->image.empty()) {
             RCLCPP_WARN(get_logger(), "image is empty");
@@ -34,6 +43,7 @@ class PowerRuneNode final : public Node {
 
         Image grayImage;
         cvtColor(image->image, grayImage, cv::COLOR_BGR2GRAY);
+
         const Feature feature   = Feature::of(grayImage);
         const Matches matches   = Matches::between(*sourceFeature, feature);
         const auto    transform = Transform2D::fit(matches);
@@ -49,10 +59,44 @@ class PowerRuneNode final : public Node {
             distCoeffs
         );
 
-        Image showImage=image->image.clone();
+        Vec3 target;
+        Vec3 center;
+        Vec3 prediction;
+
+        center     = {0.0f, 0.0f, 0.0f};
+        target     = {0.0f, 0.0f, 0.7f};
+        prediction = {0.0f, 0.3f, 0.63f};
+
+        center = transform3D*center;
+        centerDistance.push_back(length(center));
+        if (centerDistance.size() > 50)
+            centerDistance.pop_front();
+        center*=std::accumulate(centerDistance.begin(), centerDistance.end(), 0.0)/(length(center)*centerDistance.size());
+
+        target = transform3D*target;
+        targetDistance.push_back(length(target));
+        if (targetDistance.size() > 50)
+            targetDistance.pop_front();
+        target*=std::accumulate(targetDistance.begin(), targetDistance.end(), 0.0)/(length(target)*targetDistance.size());
+
+        prediction = transform3D*prediction;
+        predictionDistance.push_back(length(prediction));
+        if (predictionDistance.size() > 50)
+            predictionDistance.pop_front();
+        prediction*=std::accumulate(predictionDistance.begin(), predictionDistance.end(), 0.0)/(length(prediction)*predictionDistance.size());
+
+
+        // 测试输出
+        Image showImage = image->image.clone();
         drawKeypoints(showImage, feature.keyPoints, showImage);
-        for (auto && imagePoint : imagePoints)
-            circle(showImage, {static_cast<int>(imagePoint(0)), static_cast<int>(imagePoint(1))}, 5, cv::Scalar(255, 255, 0), -1);
+        for (auto&& imagePoint: imagePoints)
+            circle(
+                showImage,
+                {static_cast<int>(imagePoint(0)), static_cast<int>(imagePoint(1))},
+                5,
+                cv::Scalar(255, 255, 0),
+                -1
+            );
         imshow("showImage", showImage);
         cv::waitKey(1);
 
@@ -69,28 +113,25 @@ class PowerRuneNode final : public Node {
         rune_in_camera_publisher->publish(polygon_msg);
 
         geometry_msgs::msg::PointStamped center_msg;
-        Vec3 center = transform3D * sourceWorldPoints[3];
-        center_msg.point.x = center(0);
-        center_msg.point.y = center(1);
-        center_msg.point.z = center(2);
-        center_msg.header = imageRos->header;
+        center_msg.point.x =center(0);
+        center_msg.point.y =center(1);
+        center_msg.point.z =center(2);
+        center_msg.header  = imageRos->header;
         center_in_camera_publisher->publish(center_msg);
 
-        geometry_msgs::msg::PointStamped rune_center_msg;
-        Vec3 rune_center = transform3D * sourceWorldPoints[0];
-        rune_center_msg.point.x = rune_center(0);
-        rune_center_msg.point.y = rune_center(1);
-        rune_center_msg.point.z = rune_center(2);
-        rune_center_msg.header = imageRos->header;
-        rune_center_in_camera_publisher->publish(rune_center_msg);
+        geometry_msgs::msg::PointStamped taget_msg;
+        taget_msg.point.x = target(0);
+        taget_msg.point.y = target(1);
+        taget_msg.point.z = target(2);
+        taget_msg.header  = imageRos->header;
+        target_in_camera_publisher->publish(taget_msg);
 
-        geometry_msgs::msg::PointStamped end_msg;
-        Vec3 end = transform3D * sourceWorldPoints[2];
-        end_msg.point.x = end(0);
-        end_msg.point.y = end(1);
-        end_msg.point.z = end(2);
-        end_msg.header = imageRos->header;
-        end_in_camera_publisher->publish(end_msg);
+        geometry_msgs::msg::PointStamped prediction_msg;
+        prediction_msg.point.x =prediction(0);
+        prediction_msg.point.y =prediction(1);
+        prediction_msg.point.z =prediction(2);
+        prediction_msg.header  = imageRos->header;
+        prediction_in_camera_publisher->publish(prediction_msg);
     }
 
 public:
@@ -110,12 +151,12 @@ public:
             "center_in_camera",
             10
         );
-        rune_center_in_camera_publisher = create_publisher<geometry_msgs::msg::PointStamped>(
-            "rune_center_in_camera",
+        target_in_camera_publisher = create_publisher<geometry_msgs::msg::PointStamped>(
+            "target_in_camera",
             10
         );
-        end_in_camera_publisher = create_publisher<geometry_msgs::msg::PointStamped>(
-            "end_in_camera",
+        prediction_in_camera_publisher = create_publisher<geometry_msgs::msg::PointStamped>(
+            "prediction_in_camera",
             10
         );
     }
@@ -130,6 +171,8 @@ public:
         cvtColor(image, image, cv::COLOR_BGR2GRAY);
         sourceFeature = std::make_shared<Feature>(Feature::of(image));
         Vec2 imageSize{static_cast<float>(image.cols), static_cast<float>(image.rows)};
+
+
 
         sourceImagePoints = {
                     {imageSize(0) * 0.54f, imageSize(1) * 0.18f},
@@ -151,7 +194,7 @@ public:
 };
 
 
-int main(int argc, char** argv) {
+int main(const int argc, char** argv) {
     init(argc, argv);
     const auto powerRuneNode = std::make_shared<PowerRuneNode>();
     powerRuneNode->init();
