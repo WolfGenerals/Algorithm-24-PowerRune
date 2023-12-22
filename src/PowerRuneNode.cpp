@@ -3,6 +3,7 @@
 #include "Converter/Transform.hpp"
 #include "cv_bridge/cv_bridge.h"
 #include "geometry_msgs/msg/polygon_stamped.hpp"
+#include "geometry_msgs/msg/point_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
 
@@ -19,6 +20,9 @@ class PowerRuneNode final : public Node {
 
 
     Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr rune_in_camera_publisher;
+    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr center_in_camera_publisher;
+    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr rune_center_in_camera_publisher;
+    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr end_in_camera_publisher;
     Subscription<sensor_msgs::msg::Image>::SharedPtr         image_subscriber;
 
     void main(const sensor_msgs::msg::Image::SharedPtr& imageRos) const {
@@ -57,12 +61,36 @@ class PowerRuneNode final : public Node {
             Vec3                        result = transform3D * point;
             geometry_msgs::msg::Point32 point_msg;
             point_msg.x = result(0);
-            point_msg.y = -result(1);
-            point_msg.z = -result(2);
+            point_msg.y = result(1);
+            point_msg.z = result(2);
             polygon_msg.polygon.points.push_back(point_msg);
         }
         polygon_msg.header = imageRos->header;
         rune_in_camera_publisher->publish(polygon_msg);
+
+        geometry_msgs::msg::PointStamped center_msg;
+        Vec3 center = transform3D * sourceWorldPoints[3];
+        center_msg.point.x = center(0);
+        center_msg.point.y = center(1);
+        center_msg.point.z = center(2);
+        center_msg.header = imageRos->header;
+        center_in_camera_publisher->publish(center_msg);
+
+        geometry_msgs::msg::PointStamped rune_center_msg;
+        Vec3 rune_center = transform3D * sourceWorldPoints[0];
+        rune_center_msg.point.x = rune_center(0);
+        rune_center_msg.point.y = rune_center(1);
+        rune_center_msg.point.z = rune_center(2);
+        rune_center_msg.header = imageRos->header;
+        rune_center_in_camera_publisher->publish(rune_center_msg);
+
+        geometry_msgs::msg::PointStamped end_msg;
+        Vec3 end = transform3D * sourceWorldPoints[2];
+        end_msg.point.x = end(0);
+        end_msg.point.y = end(1);
+        end_msg.point.z = end(2);
+        end_msg.header = imageRos->header;
+        end_in_camera_publisher->publish(end_msg);
     }
 
 public:
@@ -76,6 +104,18 @@ public:
 
         rune_in_camera_publisher = create_publisher<geometry_msgs::msg::PolygonStamped>(
             "rune_in_camera",
+            10
+        );
+        center_in_camera_publisher = create_publisher<geometry_msgs::msg::PointStamped>(
+            "center_in_camera",
+            10
+        );
+        rune_center_in_camera_publisher = create_publisher<geometry_msgs::msg::PointStamped>(
+            "rune_center_in_camera",
+            10
+        );
+        end_in_camera_publisher = create_publisher<geometry_msgs::msg::PointStamped>(
+            "end_in_camera",
             10
         );
     }

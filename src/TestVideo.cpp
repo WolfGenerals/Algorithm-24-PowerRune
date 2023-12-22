@@ -17,7 +17,8 @@ int main(int argc, char** argv) {
         capture >> frame;
 
         if (frame.empty()) { break; }
-        cv::waitKey(25);
+        namedWindow("showImage", cv::WINDOW_NORMAL);
+        cv::waitKey(0);
 
         std_msgs::msg::Header header;
         header.frame_id = "map";

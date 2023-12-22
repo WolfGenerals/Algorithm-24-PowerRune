@@ -3,8 +3,10 @@
 
 #include "../Alias.hpp"
 #include "opencv2/opencv.hpp"
+#include "opencv2/xfeatures2d.hpp"
 
 static inline const cv::Ptr<cv::Feature2D> detector = cv::ORB::create(500, 2, 1, 31, 0, 2, cv::ORB::HARRIS_SCORE, 127, 20);
+static inline const cv::Ptr<cv::Feature2D> computer = cv::xfeatures2d::BEBLID::create(0.75f);
 
 /**
  * \brief 图像的特征
@@ -28,7 +30,9 @@ struct Feature {
         Descriptors               descriptors;
 
         // 使用detector对象的detectAndCompute函数来检测图像中的特征点和计算描述符
-        detector->detectAndCompute(image, cv::noArray(), keyPoints, descriptors);
+        detector->detect(image, keyPoints);
+        computer->compute(image, keyPoints, descriptors);
+        // detector->detectAndCompute(image, cv::noArray(), keyPoints, descriptors);
 
         return {move(keyPoints), std::move(descriptors)};
     }
