@@ -14,30 +14,33 @@ find_package(geometry_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 
-add_executable(main
+add_executable(detector
         src/PowerRuneNode.cpp
         src/Alias.hpp
         src/RuneRecognizer/Feature.hpp
         src/RuneRecognizer/Matches.hpp
 )
-target_include_directories(main PUBLIC
+include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
 
 ament_target_dependencies(
-        main
-        "rclcpp"
-        "std_msgs"
-        "sensor_msgs"
-        "geometry_msgs"
-        "cv_bridge"
-        "OpenCV"
+        detector
+        rclcpp
+        std_msgs
+        sensor_msgs
+        geometry_msgs
+        cv_bridge
+        OpenCV
 )
 
-install(TARGETS main
+install(TARGETS detector
         DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY launch
+        DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY temp
         DESTINATION lib/${PROJECT_NAME})
+
 
 add_executable(video
         src/TestVideo.cpp

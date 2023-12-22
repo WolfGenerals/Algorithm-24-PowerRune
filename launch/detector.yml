@@ -1,0 +1,29 @@
+launch:
+  - node:
+      pkg: power_rune
+      exec: detector
+      param:
+        - name: world_target
+          value: [ 0.0, 0.0, 0.7 ]
+        - name: world_center
+          value: [ 0.0, 0.0, 0.0 ]
+        - name: world_points
+          value: [
+            0.0,0.000,0.00,
+            0.0,0.160,0.54,
+            0.0,0.160,0.84,
+            0.0,0.000,0.70,
+            0.0,-0.16,0.86,
+            0.0,-0.16,0.54,
+          ]
+        - name: image_points
+          value: [
+            112.86,72.900,
+            52.250,243.00,
+            52.250,344.25,
+            104.50,283.50,
+            156.75,344.25,
+            156.75,243.00,
+          ]
+        - name: source_image
+          value: /mnt/c/Projects/C/Algorithm-24/src/power_rune/temp/img.png
