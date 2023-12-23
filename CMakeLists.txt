@@ -34,7 +34,22 @@ ament_target_dependencies(
         "OpenCV"
 )
 
+add_executable(
+        predictor
+        src/Predictor.cpp
+)
+ament_target_dependencies(
+        predictor
+        "rclcpp"
+        "std_msgs"
+        "sensor_msgs"
+        "geometry_msgs"
+        "cv_bridge"
+        "OpenCV"
+)
 install(TARGETS main
+        DESTINATION lib/${PROJECT_NAME})
+install(TARGETS predictor
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY temp
         DESTINATION lib/${PROJECT_NAME})
