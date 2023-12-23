@@ -13,6 +13,8 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 add_executable(detector
         src/PowerRuneNode.cpp
@@ -34,6 +36,24 @@ ament_target_dependencies(
         OpenCV
 )
 
+add_executable(
+        predictor
+        src/Predictor.cpp
+)
+ament_target_dependencies(
+        predictor
+        "rclcpp"
+        "std_msgs"
+        "sensor_msgs"
+        "geometry_msgs"
+        "cv_bridge"
+        "OpenCV"
+        "tf2"
+        "tf2_ros"
+)
+install(TARGETS main
+        DESTINATION lib/${PROJECT_NAME})
+install(TARGETS predictor
 install(TARGETS detector
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch
