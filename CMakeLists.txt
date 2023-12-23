@@ -13,6 +13,8 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 add_executable(main
         src/PowerRuneNode.cpp
@@ -46,6 +48,8 @@ ament_target_dependencies(
         "geometry_msgs"
         "cv_bridge"
         "OpenCV"
+        "tf2"
+        "tf2_ros"
 )
 install(TARGETS main
         DESTINATION lib/${PROJECT_NAME})
