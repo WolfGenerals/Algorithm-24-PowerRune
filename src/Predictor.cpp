@@ -1,10 +1,10 @@
-#include <geometry_msgs/msg/detail/point_stamped__builder.hpp>
-#include <rclcpp/node.hpp>
-
 #include "Alias.hpp"
-#include "tf2_ros/transform_listener.h"
-#include "tf2_ros/buffer.h"
 #include "Function.hpp"
+#include "geometry_msgs/msg/point_stamped.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
 
 
 using namespace std;
@@ -19,20 +19,23 @@ class PredictorNode final : public Node {
     deque<double> X, Y, Z;
     deque<double> Timestamp;
 
-    Publisher<geometry_msgs::msg::PointStamped> publisher;
+    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr publisher = create_publisher<
+        geometry_msgs::msg::PointStamped>("prediction", 10);
 
     // Configuration
-    static auto period() {
+    duration<double> period() const {
         double frequency;
         get_parameter("send_frequency_Hz", frequency);
         return 1s / frequency;
     }
-    static  auto delay() {
+
+    double delay() const {
         double delay;
         get_parameter("delay_ms", delay);
         return delay;
     }
-    static auto historySize() {
+
+    int historySize() const {
         int size;
         get_parameter("history_size", size);
         return size;
@@ -44,13 +47,13 @@ class PredictorNode final : public Node {
             RCLCPP_WARN(get_logger(), "can not get transform from base_link to camera_link");
             return;
         }
-        const auto pointStamped = buffer.transform(msg, "base_link");
+        const auto pointStamped = buffer.transform(*msg, "base_link");
 
-        X.push_back(pointStamped->point.x);
-        Y.push_back(pointStamped->point.y);
-        Z.push_back(pointStamped->point.z);
+        X.push_back(pointStamped.point.x);
+        Y.push_back(pointStamped.point.y);
+        Z.push_back(pointStamped.point.z);
         Timestamp.push_back(
-            pointStamped->header.stamp.sec * 1000 + pointStamped->header.stamp.nanosec / 1000.0
+            pointStamped.header.stamp.sec * 1000 + pointStamped.header.stamp.nanosec / 1000000.0
         );
         if (X.size() > historySize()) {
             X.pop_front();
@@ -65,27 +68,48 @@ class PredictorNode final : public Node {
         QuadraticFunctions y = QuadraticFunctions::fit(Y, Timestamp);
         QuadraticFunctions z = QuadraticFunctions::fit(Z, Timestamp);
 
-        rclcpp::Time                     now = get_clock()->now();
-        double currentTimestamp = now.seconds()*1000 +now.nanoseconds() / 1000.0;
+        const auto   now              = this->now();
+        const double currentTimestamp = now.seconds() * 1000 + now.nanoseconds() / 1000000.0;
 
         geometry_msgs::msg::PointStamped msg;
         msg.header.frame_id = "base_link";
-        msg.header.stamp    = this->now();
-        msg.point.x         = x(currentTimestamp+delay());
-        msg.point.y         = y(currentTimestamp+delay());
-        msg.point.z         = z(currentTimestamp+delay());
-        this->publish(msg);
+        msg.header.stamp    = now;
+        msg.point.x         = x(currentTimestamp + delay());
+        msg.point.y         = y(currentTimestamp + delay());
+        msg.point.z         = z(currentTimestamp + delay());
+        publisher->publish(msg);
     }
 
 public:
     PredictorNode()
-        : Node("predictor") { RCLCPP_INFO(get_logger(), "predictor start"); }
+        : Node("predictor") {
+        declare_parameter("send_frequency_Hz", 0.0);
+        declare_parameter("delay_ms", 0.0);
+        declare_parameter("history_size", 100);
+
+        RCLCPP_INFO(get_logger(), "predictor start");
+        RCLCPP_INFO(get_logger(), "send_frequency_Hz: %f", period().count());
+        RCLCPP_INFO(get_logger(), "delay_ms: %f", delay());
+        RCLCPP_INFO(get_logger(), "history_size: %d", historySize());
+    }
 
 private:
-    auto targetSubscriber = create_subscription<geometry_msgs::msg::PointStamped>(
-        "target",
-        10,
-        [this](const geometry_msgs::msg::PointStamped::SharedPtr msg) -> void { update(msg); }
-    );
-    auto predictionSender = create_wall_timer(period(), [this]() -> void { predict(); });
+    Subscription<geometry_msgs::msg::PointStamped>::SharedPtr targetSubscriber
+            = create_subscription<geometry_msgs::msg::PointStamped>(
+                "target",
+                10,
+                [this](const geometry_msgs::msg::PointStamped::SharedPtr msg) -> void {
+                    update(msg);
+                }
+            );
+    TimerBase::SharedPtr predictionSender =
+            create_wall_timer(period(), [this]() -> void { predict(); });
 };
+
+
+int main(int argc, char* argv[]) {
+    init(argc, argv);
+    spin(std::make_shared<PredictorNode>());
+    shutdown();
+    return 0;
+}

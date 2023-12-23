@@ -27,3 +27,13 @@ launch:
           ]
         - name: source_image
           value: /mnt/c/Projects/C/Algorithm-24/src/power_rune/temp/img.png
+  - node:
+      pkg: power_rune
+      exec: predictor
+      param:
+        - name: send_frequency_Hz
+          value: 60
+        - name : delay_ms
+          value: 100
+        - name: history_size
+          value: 500
