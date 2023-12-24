@@ -72,6 +72,10 @@ ament_target_dependencies(
         "sensor_msgs"
         "cv_bridge"
         "OpenCV"
+        geometry_msgs
+        tf2
+        tf2_ros
+        tf2_geometry_msgs
 )
 install(TARGETS video
         DESTINATION lib/${PROJECT_NAME})

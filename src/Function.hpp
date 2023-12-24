@@ -4,18 +4,23 @@
 
 
 class QuadraticFunctions {
+public:
     // 系数
-    // f(x) = a + b*x + c*x^2
+    // f(x) = a*x^2 + b*x + c
     double a, b, c;
 
-public:
     QuadraticFunctions(const double a, const double b, const double c)
         : a(a),
           b(b),
-          c(c) {}
+          c(c) {
+    }
 
     double operator()(const double x) const {
-        return a + b * x + c * x * x;
+        return a * x * x + b * x + c;
+    }
+
+    [[nodiscard]] bool valid() const {
+        return a!= 0 || b!= 0 || c!= 0;
     }
 
     static QuadraticFunctions fit(const std::deque<double>& xs, const std::deque<double>& ys) {
@@ -53,6 +58,9 @@ public:
         a /= (x3 - x * x2) * (x3 - x * x2) - (x4 - x2 * x2) * (x2 - x * x);
         b = (xy - x * y - a * (x3 - x2 * x)) / (x2 - x * x);
         c = y - a * x2 - b * x;
+
+        if (std::isnan(a) || std::isnan(b) || std::isnan(c))
+            return {0, 0, 0};
         return {a, b, c};
     }
 };

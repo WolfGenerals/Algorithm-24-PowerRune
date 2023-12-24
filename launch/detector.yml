@@ -30,8 +30,8 @@ launch:
       exec: predictor
       param:
         - name: send_frequency_Hz
-          value: 60.0
-        - name : delay_ms
-          value: 100.0
+          value: 1.0
+        - name : delay_s
+          value: 0.1
         - name: history_size
-          value: 500
+          value: 50

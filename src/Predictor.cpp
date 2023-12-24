@@ -18,6 +18,8 @@ class PredictorNode final : public Node {
     double _delay_ms          = declare_parameter("delay_ms", 1.0);
     long   _history_size      = declare_parameter("history_size", 100);
 
+    double startTimestamp = now().seconds();
+
     duration<double> period() const {
         double frequency;
         get_parameter("send_frequency_Hz", frequency);
@@ -27,7 +29,7 @@ class PredictorNode final : public Node {
 
     double delay() const {
         double delay;
-        get_parameter("delay_ms", delay);
+        get_parameter("delay_s", delay);
         return delay;
     }
 
@@ -69,8 +71,16 @@ class PredictorNode final : public Node {
                     Y.push_back(pointStamped.point.y);
                     Z.push_back(pointStamped.point.z);
                     Timestamp.push_back(
-                        pointStamped.header.stamp.sec * 1000 + pointStamped.header.stamp.nanosec /
-                        1000000.0
+                        pointStamped.header.stamp.sec
+                        + pointStamped.header.stamp.nanosec / 1000000000.0
+                        - startTimestamp
+                    );
+                    RCLCPP_INFO(
+                        get_logger(),
+                        "Timestamp: %f",
+                        pointStamped.header.stamp.sec
+                        + pointStamped.header.stamp.nanosec / 1000000000.0
+                        - startTimestamp
                     );
                     if (X.size() > historySize()) {
                         X.pop_front();
@@ -88,19 +98,45 @@ class PredictorNode final : public Node {
                     const auto x = QuadraticFunctions::fit(X, Timestamp);
                     const auto y = QuadraticFunctions::fit(Y, Timestamp);
                     const auto z = QuadraticFunctions::fit(Z, Timestamp);
-
+cv::solve()
+                    if (!x.valid() || !y.valid() || !z.valid()) {
+                        RCLCPP_WARN(
+                            get_logger(),
+                            "can't fit function"
+                        );
+                        return;
+                    }
                     const auto   now              = this->now();
-                    const double currentTimestamp =
-                            now.seconds() * 1000 +
-                            static_cast<int>(now.nanoseconds()) / 1000000.0;
-
+                    const double currentTimestamp = now.seconds() - startTimestamp;
                     PointStamped msg;
                     msg.header.frame_id = "base_link";
                     msg.header.stamp    = now;
                     msg.point.x         = x(currentTimestamp + delay());
                     msg.point.y         = y(currentTimestamp + delay());
                     msg.point.z         = z(currentTimestamp + delay());
+
+
+                    RCLCPP_INFO(
+                        get_logger(),
+                        "currentTimestamp: %f",
+                        currentTimestamp
+                    );
+
                     publisher->publish(msg);
+                    RCLCPP_INFO(
+                        get_logger(),
+                        "x: %f, y: %f, z: %f",
+                        msg.point.x,
+                        msg.point.y,
+                        msg.point.z
+                    );
+                    RCLCPP_INFO(
+                        get_logger(),
+                        "x0: %f, y0: %f, z0: %f",
+                        x(currentTimestamp),
+                        y(currentTimestamp),
+                        z(currentTimestamp)
+                    );
                 }
             );
 
@@ -109,7 +145,7 @@ public:
         : Node("predictor") {
         RCLCPP_INFO(get_logger(), "predictor start");
         RCLCPP_INFO(get_logger(), "send_frequency_Hz: %f", period().count());
-        RCLCPP_INFO(get_logger(), "delay_ms: %f", delay());
+        RCLCPP_INFO(get_logger(), "delay_s: %f", delay());
         RCLCPP_INFO(get_logger(), "history_size: %d", historySize());
     }
 };
