@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
     rclcpp::Node node("video");
     RCLCPP_INFO(node.get_logger(), "hello world");
-    const auto       publisher = node.create_publisher<sensor_msgs::msg::Image>("map", 10);
+    const auto       publisher = node.create_publisher<sensor_msgs::msg::Image>("/camera", 10);
     cv::VideoCapture capture{
                 "/mnt/c/Projects/C/Algorithm-24/src/power_rune/temp/关灯-红方大能量机关-失败后激活成功的全激活过程.MP4"
             };
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
         cv::waitKey(0);
 
         std_msgs::msg::Header header;
-        header.frame_id = "map";
+        header.frame_id = "camera";
         header.stamp    = node.now();
         cv_bridge::CvImage                 cvImage(header, "bgr8", frame);
         sensor_msgs::msg::Image::SharedPtr msg = cvImage.toImageMsg();

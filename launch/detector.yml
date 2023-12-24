@@ -5,8 +5,6 @@ launch:
       param:
         - name: world_target
           value: [ 0.0, 0.0, 0.7 ]
-        - name: world_center
-          value: [ 0.0, 0.0, 0.0 ]
         - name: world_points
           value: [
             0.0,0.000,0.00,
@@ -32,8 +30,8 @@ launch:
       exec: predictor
       param:
         - name: send_frequency_Hz
-          value: 60
+          value: 60.0
         - name : delay_ms
-          value: 100
+          value: 100.0
         - name: history_size
           value: 500

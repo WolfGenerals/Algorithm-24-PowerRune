@@ -10,23 +10,19 @@
 using namespace std;
 using namespace std::chrono_literals;
 using namespace rclcpp;
+using geometry_msgs::msg::PointStamped;
 
 
 class PredictorNode final : public Node {
-    tf2_ros::Buffer            buffer{get_clock()};
-    tf2_ros::TransformListener listener{buffer};
+    double _send_frequency_Hz = declare_parameter("send_frequency_Hz", 0.0);
+    double _delay_ms          = declare_parameter("delay_ms", 1.0);
+    long   _history_size      = declare_parameter("history_size", 100);
 
-    deque<double> X, Y, Z;
-    deque<double> Timestamp;
-
-    Publisher<geometry_msgs::msg::PointStamped>::SharedPtr publisher = create_publisher<
-        geometry_msgs::msg::PointStamped>("prediction", 10);
-
-    // Configuration
     duration<double> period() const {
         double frequency;
         get_parameter("send_frequency_Hz", frequency);
-        return 1s / frequency;
+        RCLCPP_INFO(get_logger(), "send_frequency_Hz: %f", frequency);
+        return 1000ms / frequency;
     }
 
     double delay() const {
@@ -41,73 +37,85 @@ class PredictorNode final : public Node {
         return size;
     }
 
-    // Progress
-    void update(const geometry_msgs::msg::PointStamped::SharedPtr& msg) {
-        if (!buffer.canTransform("base_link", msg->header.frame_id, tf2::TimePointZero)) {
-            RCLCPP_WARN(get_logger(), "can not get transform from base_link to camera_link");
-            return;
-        }
-        const auto pointStamped = buffer.transform(*msg, "base_link");
 
-        X.push_back(pointStamped.point.x);
-        Y.push_back(pointStamped.point.y);
-        Z.push_back(pointStamped.point.z);
-        Timestamp.push_back(
-            pointStamped.header.stamp.sec * 1000 + pointStamped.header.stamp.nanosec / 1000000.0
-        );
-        if (X.size() > historySize()) {
-            X.pop_front();
-            Y.pop_front();
-            Z.pop_front();
-            Timestamp.pop_front();
-        }
-    }
+    tf2_ros::Buffer            buffer{get_clock()};
+    tf2_ros::TransformListener listener{buffer};
 
-    void predict() {
-        QuadraticFunctions x = QuadraticFunctions::fit(X, Timestamp);
-        QuadraticFunctions y = QuadraticFunctions::fit(Y, Timestamp);
-        QuadraticFunctions z = QuadraticFunctions::fit(Z, Timestamp);
+    deque<double> X, Y, Z;
+    deque<double> Timestamp;
 
-        const auto   now              = this->now();
-        const double currentTimestamp = now.seconds() * 1000 + now.nanoseconds() / 1000000.0;
+    Publisher<PointStamped>::SharedPtr publisher =
+            create_publisher<PointStamped>("prediction", 10);
 
-        geometry_msgs::msg::PointStamped msg;
-        msg.header.frame_id = "base_link";
-        msg.header.stamp    = now;
-        msg.point.x         = x(currentTimestamp + delay());
-        msg.point.y         = y(currentTimestamp + delay());
-        msg.point.z         = z(currentTimestamp + delay());
-        publisher->publish(msg);
-    }
+    Subscription<PointStamped>::SharedPtr targetSubscriber =
+            create_subscription<PointStamped>(
+                "target",
+                10,
+                [this](const PointStamped::SharedPtr msg) -> void {
+                    if (!buffer.canTransform(
+                        "base_link",
+                        msg->header.frame_id,
+                        tf2::TimePointZero
+                    )) {
+                        RCLCPP_WARN(
+                            get_logger(),
+                            "can not get transform from base_link to camera_link"
+                        );
+                        return;
+                    }
+
+                    const auto pointStamped = buffer.transform(*msg, "base_link");
+                    X.push_back(pointStamped.point.x);
+                    Y.push_back(pointStamped.point.y);
+                    Z.push_back(pointStamped.point.z);
+                    Timestamp.push_back(
+                        pointStamped.header.stamp.sec * 1000 + pointStamped.header.stamp.nanosec /
+                        1000000.0
+                    );
+                    if (X.size() > historySize()) {
+                        X.pop_front();
+                        Y.pop_front();
+                        Z.pop_front();
+                        Timestamp.pop_front();
+                    }
+                }
+            );
+
+    TimerBase::SharedPtr predictionSender =
+            create_wall_timer(
+                period(),
+                [this]() -> void {
+                    const auto x = QuadraticFunctions::fit(X, Timestamp);
+                    const auto y = QuadraticFunctions::fit(Y, Timestamp);
+                    const auto z = QuadraticFunctions::fit(Z, Timestamp);
+
+                    const auto   now              = this->now();
+                    const double currentTimestamp =
+                            now.seconds() * 1000 +
+                            static_cast<int>(now.nanoseconds()) / 1000000.0;
+
+                    PointStamped msg;
+                    msg.header.frame_id = "base_link";
+                    msg.header.stamp    = now;
+                    msg.point.x         = x(currentTimestamp + delay());
+                    msg.point.y         = y(currentTimestamp + delay());
+                    msg.point.z         = z(currentTimestamp + delay());
+                    publisher->publish(msg);
+                }
+            );
 
 public:
     PredictorNode()
         : Node("predictor") {
-        declare_parameter("send_frequency_Hz", 0.0);
-        declare_parameter("delay_ms", 0.0);
-        declare_parameter("history_size", 100);
-
         RCLCPP_INFO(get_logger(), "predictor start");
         RCLCPP_INFO(get_logger(), "send_frequency_Hz: %f", period().count());
         RCLCPP_INFO(get_logger(), "delay_ms: %f", delay());
         RCLCPP_INFO(get_logger(), "history_size: %d", historySize());
     }
-
-private:
-    Subscription<geometry_msgs::msg::PointStamped>::SharedPtr targetSubscriber
-            = create_subscription<geometry_msgs::msg::PointStamped>(
-                "target",
-                10,
-                [this](const geometry_msgs::msg::PointStamped::SharedPtr msg) -> void {
-                    update(msg);
-                }
-            );
-    TimerBase::SharedPtr predictionSender =
-            create_wall_timer(period(), [this]() -> void { predict(); });
 };
 
 
-int main(int argc, char* argv[]) {
+int main(const int argc, char* argv[]) {
     init(argc, argv);
     spin(std::make_shared<PredictorNode>());
     shutdown();
