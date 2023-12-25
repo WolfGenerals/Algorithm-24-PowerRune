@@ -23,7 +23,7 @@ launch:
             156.75,344.25,
           ]
         - name: history_size
-          value: 50
+          value: 40
         - name: source_image
           value: /mnt/c/Projects/C/Algorithm-24/src/power_rune/temp/img.png
   - node:

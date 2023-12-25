@@ -19,6 +19,7 @@ class PowerRuneNode final : public Node {
     vector<double> _image_center = declare_parameter("image_center", vector<double>());
     vector<double> _world_points = declare_parameter("world_points", vector<double>());
     vector<double> _image_points = declare_parameter("image_points", vector<double>());
+    long           _history_size = declare_parameter("history_size", 10);
     string         _source_image = declare_parameter("source_image", "null");
 
     shared_ptr<Feature> sourceFeature = nullptr;
@@ -172,44 +173,57 @@ class PowerRuneNode final : public Node {
                     Vec2 target2d = *transform * image_target();
                     Vec2 center2d = *transform * image_center();
 
-                    // double distance = length(target2d - center2d);
-                    // distances.push_back(distance);
-                    // if (distances.size() > history_size())
-                    //     distances.pop_front();
-                    // double average = accumulate(distances.begin(), distances.end(), 0.0)
-                    //         / static_cast<double>(distances.size());
-                    // center2d = target2d +(center2d -target2d)/distance*average;
+                    const double distance = length(target2d - center2d);
+                    distances.push_back(distance);
+                    if (distances.size() > history_size())
+                        distances.pop_front();
+                    double average = 0.0;
+                    for (const double distance1: distances) average += distance1;
+                    average /= static_cast<double>(distances.size());
+                    center2d = target2d + (center2d - target2d) / distance * average;
 
                     cv::Mat show = image->image;
-                    cv::circle(show, {static_cast<int>(target2d(0)), static_cast<int>(target2d(1))}, 5, cv::Scalar(255, 0, 255), -1);
-                    cv::circle(show, {static_cast<int>(center2d(0)), static_cast<int>(center2d(1))}, 5, cv::Scalar(255, 255, 0), -1);
+                    cv::circle(
+                        show,
+                        {static_cast<int>(target2d(0)), static_cast<int>(target2d(1))},
+                        5,
+                        cv::Scalar(255, 0, 255),
+                        -1
+                    );
+                    cv::circle(
+                        show,
+                        {static_cast<int>(center2d(0)), static_cast<int>(center2d(1))},
+                        5,
+                        cv::Scalar(255, 255, 0),
+                        -1
+                    );
                     imshow("show", show);
                     cv::waitKey(1);
 
-                    // vector<Vec3> worldPoints = world_points();
-                    // vector<Vec2> imagePoints = *transform * image_points();
-                    //
-                    // worldPoints.push_back(world_target());
-                    // worldPoints.push_back(world_center());
-                    // imagePoints.push_back(target2d);
-                    // imagePoints.push_back(center2d);
-                    //
-                    // const Transform3D transform3D = Transform3D::fit(
-                    //     worldPoints,
-                    //     imagePoints,
-                    //     cameraMatrix,
-                    //     distCoeffs
-                    // );
-                    //
-                    // Vec3 target = transform3D * world_target();
-                    //
-                    // PointStamped taget_msg;
-                    // taget_msg.point.x = target(0);
-                    // taget_msg.point.y = target(1);
-                    // taget_msg.point.z = target(2);
-                    // taget_msg.header  = imageRos->header;
-                    // target_publisher->publish(taget_msg);
-                    }
+                    vector<Vec3> worldPoints = world_points();
+                    vector<Vec2> imagePoints = *transform * image_points();
+
+                    worldPoints.push_back(world_target());
+                    worldPoints.push_back(world_center());
+                    imagePoints.push_back(target2d);
+                    imagePoints.push_back(center2d);
+
+                    const Transform3D transform3D = Transform3D::fit(
+                        worldPoints,
+                        imagePoints,
+                        cameraMatrix,
+                        distCoeffs
+                    );
+
+                    Vec3 target = transform3D * world_target();
+
+                    PointStamped taget_msg;
+                    taget_msg.point.x = target(0);
+                    taget_msg.point.y = target(1);
+                    taget_msg.point.z = target(2);
+                    taget_msg.header  = imageRos->header;
+                    target_publisher->publish(taget_msg);
+                }
             );
 
 public:

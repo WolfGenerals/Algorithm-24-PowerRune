@@ -11,10 +11,9 @@ struct Transform2D {
         : matrix(matrix) {}
 
     Vec2 operator*(const Vec2& vec) const {
-        return {
-                    matrix(0, 0) * vec(0) + matrix(0, 1) * vec(1) + matrix(0, 2),
-                    matrix(1, 0) * vec(0) + matrix(1, 1) * vec(1) + matrix(1, 2)
-                };
+        std::vector result{vec};
+        perspectiveTransform(result, result, matrix);
+        return result[0];
     }
 
     std::vector<Vec2> operator*(const std::vector<Vec2>& vecs) const {
