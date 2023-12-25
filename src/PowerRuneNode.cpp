@@ -9,15 +9,19 @@
 using namespace std;
 using namespace rclcpp;
 using geometry_msgs::msg::PointStamped;
-using ImageMsg =  sensor_msgs::msg::Image;
+using ImageMsg = sensor_msgs::msg::Image;
+
 
 class PowerRuneNode final : public Node {
+    vector<double> _world_target = declare_parameter("world_target", vector<double>());
+    vector<double> _world_center = declare_parameter("world_center", vector<double>());
+    vector<double> _image_target = declare_parameter("image_target", vector<double>());
+    vector<double> _image_center = declare_parameter("image_center", vector<double>());
     vector<double> _world_points = declare_parameter("world_points", vector<double>());
     vector<double> _image_points = declare_parameter("image_points", vector<double>());
-    vector<double> _world_target = declare_parameter("world_target", vector<double>());
     string         _source_image = declare_parameter("source_image", "null");
 
-    shared_ptr<Feature>   sourceFeature = nullptr;
+    shared_ptr<Feature> sourceFeature = nullptr;
 
     std::vector<Vec3> world_points() const {
         vector<Vec3>   points;
@@ -67,10 +71,60 @@ class PowerRuneNode final : public Node {
                 };
     };
 
+    Vec3 world_center() const {
+        vector<double> rawData;
+
+        get_parameter("world_center", rawData);
+        if (rawData.empty())
+            RCLCPP_ERROR(get_logger(), "world_center is empty");
+        if (rawData.size() != 3)
+            RCLCPP_ERROR(get_logger(), "world_center size error");
+
+        return {
+                    static_cast<float>(rawData[0]),
+                    static_cast<float>(rawData[1]),
+                    static_cast<float>(rawData[2])
+                };
+    };
+
+    Vec2 image_target() const {
+        vector<double> rawData;
+
+        get_parameter("image_target", rawData);
+        if (rawData.empty())
+            RCLCPP_ERROR(get_logger(), "image_target is empty");
+        if (rawData.size() != 2)
+            RCLCPP_ERROR(get_logger(), "image_target size error");
+
+        return {
+                    static_cast<float>(rawData[0]),
+                    static_cast<float>(rawData[1])
+                };
+    };
+
+    Vec2 image_center() const {
+        vector<double> rawData;
+
+        get_parameter("image_center", rawData);
+        if (rawData.empty())
+            RCLCPP_ERROR(get_logger(), "image_center is empty");
+        if (rawData.size() != 2)
+            RCLCPP_ERROR(get_logger(), "image_center size error");
+
+        return {
+                    static_cast<float>(rawData[0]),
+                    static_cast<float>(rawData[1])
+                };
+    };
+
+    int history_size() const {
+        int size;
+        get_parameter("history_size", size);
+        return size;
+    };
+
     Feature source_feature() {
-        if (sourceFeature!=nullptr) {
-            return *sourceFeature;
-        }
+        if (sourceFeature != nullptr) { return *sourceFeature; }
         // load
         string source_image;
         get_parameter("source_image", source_image);
@@ -88,6 +142,7 @@ class PowerRuneNode final : public Node {
     cv::Matx33f           cameraMatrix;
     cv::Matx<float, 1, 5> distCoeffs;
 
+    deque<double> distances{};
 
     Publisher<PointStamped>::SharedPtr target_publisher =
             create_publisher<PointStamped>(
@@ -95,10 +150,10 @@ class PowerRuneNode final : public Node {
                 10
             );
     Subscription<ImageMsg>::SharedPtr image_subscriber =
-            create_subscription< ImageMsg>(
+            create_subscription<ImageMsg>(
                 "/camera",
                 10,
-                [this](const  ImageMsg::SharedPtr imageRos) -> void {
+                [this](const ImageMsg::SharedPtr imageRos) -> void {
                     const cv_bridge::CvImageConstPtr image = cv_bridge::toCvShare(imageRos);
                     if (image->image.empty()) {
                         RCLCPP_WARN(get_logger(), "image is empty");
@@ -114,10 +169,33 @@ class PowerRuneNode final : public Node {
                     if (!transform)
                         return;
 
-                    const vector<Vec2> imagePoints = *transform * image_points();
+                    Vec2 target2d = *transform * image_target();
+                    Vec2 center2d = *transform * image_center();
+
+                    // double distance = length(target2d - center2d);
+                    // distances.push_back(distance);
+                    // if (distances.size() > history_size())
+                    //     distances.pop_front();
+                    // double average = accumulate(distances.begin(), distances.end(), 0.0)
+                    //         / static_cast<double>(distances.size());
+                    // center2d = target2d +(center2d -target2d)/distance*average;
+
+                    cv::Mat show = image->image;
+                    cv::circle(show, {static_cast<int>(target2d(0)), static_cast<int>(target2d(1))}, 5, cv::Scalar(255, 0, 255), 2);
+                    cv::circle(show, {static_cast<int>(center2d(0)), static_cast<int>(center2d(1))}, 5, cv::Scalar(255, 255, 0), 2);
+                    imshow("show", show);
+                    cv::waitKey(1);
+
+                    vector<Vec3> worldPoints = world_points();
+                    vector<Vec2> imagePoints = *transform * image_points();
+
+                    worldPoints.push_back(world_target());
+                    worldPoints.push_back(world_center());
+                    imagePoints.push_back(target2d);
+                    imagePoints.push_back(center2d);
 
                     const Transform3D transform3D = Transform3D::fit(
-                        world_points(),
+                        worldPoints,
                         imagePoints,
                         cameraMatrix,
                         distCoeffs
@@ -131,7 +209,9 @@ class PowerRuneNode final : public Node {
                     taget_msg.point.z = target(2);
                     taget_msg.header  = imageRos->header;
                     target_publisher->publish(taget_msg);
-                }
+
+
+                    }
             );
 
 public:

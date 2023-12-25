@@ -91,7 +91,7 @@ class PredictorNode final : public Node {
                     const auto x = QuadraticFunctions::fit(X, Timestamp);
                     const auto y = QuadraticFunctions::fit(Y, Timestamp);
                     const auto z = QuadraticFunctions::fit(Z, Timestamp);
-cv::solve()
+
                     if (!x.valid() || !y.valid() || !z.valid()) {
                         RCLCPP_WARN(
                             get_logger(),
