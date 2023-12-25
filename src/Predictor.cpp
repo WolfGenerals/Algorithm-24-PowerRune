@@ -75,13 +75,6 @@ class PredictorNode final : public Node {
                         + pointStamped.header.stamp.nanosec / 1000000000.0
                         - startTimestamp
                     );
-                    RCLCPP_INFO(
-                        get_logger(),
-                        "Timestamp: %f",
-                        pointStamped.header.stamp.sec
-                        + pointStamped.header.stamp.nanosec / 1000000000.0
-                        - startTimestamp
-                    );
                     if (X.size() > historySize()) {
                         X.pop_front();
                         Y.pop_front();
@@ -114,29 +107,6 @@ cv::solve()
                     msg.point.x         = x(currentTimestamp + delay());
                     msg.point.y         = y(currentTimestamp + delay());
                     msg.point.z         = z(currentTimestamp + delay());
-
-
-                    RCLCPP_INFO(
-                        get_logger(),
-                        "currentTimestamp: %f",
-                        currentTimestamp
-                    );
-
-                    publisher->publish(msg);
-                    RCLCPP_INFO(
-                        get_logger(),
-                        "x: %f, y: %f, z: %f",
-                        msg.point.x,
-                        msg.point.y,
-                        msg.point.z
-                    );
-                    RCLCPP_INFO(
-                        get_logger(),
-                        "x0: %f, y0: %f, z0: %f",
-                        x(currentTimestamp),
-                        y(currentTimestamp),
-                        z(currentTimestamp)
-                    );
                 }
             );
 
