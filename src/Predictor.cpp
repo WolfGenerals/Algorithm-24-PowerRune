@@ -21,6 +21,23 @@ double rotation(Vec3 axis, Vec3 from, Vec3 to) {
     );
 };
 
+/**
+ * \brief
+ */
+class Fit{
+    enum class State {
+        SMALL,
+        LARGE,
+        WAIT_MAXIMUM,
+        WAIT_MINIMUM,
+    };
+    constexpr double MAX= 2.090;
+
+public:
+    double A = 0.0;
+    double omega = 0.0;
+    double phi = 0.0;
+};
 
 class PredictorNode final : public rclcpp::Node {
     double _send_frequency_Hz = declare_parameter("send_frequency_Hz", 0.0);
@@ -53,14 +70,16 @@ class PredictorNode final : public rclcpp::Node {
     tf2_ros::TransformListener listener{buffer};
 
 
-    Cache<double> Timestamps{history_size()};
-    Cache<Vec3>   targets{history_size()};
+    Vec3 lastTarget;
+    double lastTimestamps;
     Cache<Vec3>   centers{history_size()};
 
     Vec3 axis() const {
         const Vec3 result{centers.avrage()(0), centers.avrage()(1), 0};
         return result / length(result);
     }
+    Publisher<PointStamped>::SharedPtr publisher =
+            create_publisher<PointStamped>("prediction", 10);
 
     Subscription<PointStamped>::SharedPtr targetSubscriber =
             create_subscription<PointStamped>(
@@ -77,14 +96,16 @@ class PredictorNode final : public rclcpp::Node {
                     }
 
                     const auto pointStamped = buffer.transform(*msg, "base_link");
-                    Timestamps.update(pointStamped.header.stamp.sec + pointStamped.header.stamp.nanosec / 1000000000.0 - startTimestamp);
-                    targets.update(
-                        {
+
+
+
+
+                    lastTimestamps=pointStamped.header.stamp.sec + pointStamped.header.stamp.nanosec / 1000000000.0 - startTimestamp;
+                    lastTarget={
                             static_cast<float>(pointStamped.point.x),
                             static_cast<float>(pointStamped.point.y),
                             static_cast<float>(pointStamped.point.z)
-                        }
-                    );
+                        };
                 }
             );
     Subscription<PointStamped>::SharedPtr centerSubscriber =
@@ -111,15 +132,24 @@ class PredictorNode final : public rclcpp::Node {
                 }
             );
 
-    Publisher<PointStamped>::SharedPtr publisher =
-            create_publisher<PointStamped>("prediction", 10);
 
     TimerBase::SharedPtr predictionSender =
             create_wall_timer(
                 period(),
                 [this]() -> void {
+
+
+
+
+
+
+
+
                     const auto   now              = this->now();
                     const double currentTimestamp = now.seconds() - startTimestamp;
+
+
+
 
                     PointStamped msg;
                     msg.header.frame_id = "base_link";
