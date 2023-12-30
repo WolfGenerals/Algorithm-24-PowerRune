@@ -12,6 +12,9 @@ using namespace std::chrono_literals;
 using namespace rclcpp;
 using geometry_msgs::msg::PointStamped;
 
+class RotationPrediction {
+
+};
 
 class PredictorNode final : public Node {
     double _send_frequency_Hz = declare_parameter("send_frequency_Hz", 0.0);
@@ -42,6 +45,7 @@ class PredictorNode final : public Node {
 
     tf2_ros::Buffer            buffer{get_clock()};
     tf2_ros::TransformListener listener{buffer};
+
 
     deque<double> X, Y, Z;
     deque<double> Timestamp;
@@ -101,12 +105,14 @@ class PredictorNode final : public Node {
                     }
                     const auto   now              = this->now();
                     const double currentTimestamp = now.seconds() - startTimestamp;
+
                     PointStamped msg;
                     msg.header.frame_id = "base_link";
                     msg.header.stamp    = now;
                     msg.point.x         = x(currentTimestamp + delay());
                     msg.point.y         = y(currentTimestamp + delay());
                     msg.point.z         = z(currentTimestamp + delay());
+                    publisher->publish(msg);
                 }
             );
 

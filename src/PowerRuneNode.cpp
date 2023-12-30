@@ -150,6 +150,11 @@ class PowerRuneNode final : public Node {
                 "target",
                 10
             );
+    Publisher<PointStamped>::SharedPtr center_publisher =
+            create_publisher<PointStamped>(
+                "center",
+                10
+            );
     Subscription<ImageMsg>::SharedPtr image_subscriber =
             create_subscription<ImageMsg>(
                 "/camera",
@@ -197,6 +202,14 @@ class PowerRuneNode final : public Node {
                         cv::Scalar(255, 255, 0),
                         -1
                     );
+                    for(auto x:*transform*image_points())
+                    cv::circle(
+                        show,
+                        {static_cast<int>(x(0)), static_cast<int>(x(1))},
+                        5,
+                        cv::Scalar(0, 255, 0),
+                        -1
+                    );
                     imshow("show", show);
                     cv::waitKey(1);
 
@@ -216,6 +229,7 @@ class PowerRuneNode final : public Node {
                     );
 
                     Vec3 target = transform3D * world_target();
+                    Vec3 center = transform3D * world_center();
 
                     PointStamped taget_msg;
                     taget_msg.point.x = target(0);
@@ -223,6 +237,14 @@ class PowerRuneNode final : public Node {
                     taget_msg.point.z = target(2);
                     taget_msg.header  = imageRos->header;
                     target_publisher->publish(taget_msg);
+
+                    PointStamped center_msg;
+                    center_msg.point.x = center(0);
+                    center_msg.point.y = center(1);
+                    center_msg.point.z = center(2);
+                    center_msg.header  = imageRos->header;
+                    center_publisher->publish(center_msg);
+
                 }
             );
 
