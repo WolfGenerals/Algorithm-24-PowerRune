@@ -1,5 +1,6 @@
 #include <cstdio>
 #include "Alias.hpp"
+#include "Cache.hpp"
 #include "Converter/Transform.hpp"
 #include "cv_bridge/cv_bridge.h"
 #include "geometry_msgs/msg/point_stamped.hpp"
@@ -143,7 +144,7 @@ class PowerRuneNode final : public Node {
     cv::Matx33f           cameraMatrix;
     cv::Matx<float, 1, 5> distCoeffs;
 
-    deque<double> distances{};
+    Cache<double> distances{history_size()};
 
     Publisher<PointStamped>::SharedPtr target_publisher =
             create_publisher<PointStamped>(
@@ -179,13 +180,8 @@ class PowerRuneNode final : public Node {
                     Vec2 center2d = *transform * image_center();
 
                     const double distance = length(target2d - center2d);
-                    distances.push_back(distance);
-                    if (distances.size() > history_size())
-                        distances.pop_front();
-                    double average = 0.0;
-                    for (const double distance1: distances) average += distance1;
-                    average /= static_cast<double>(distances.size());
-                    center2d = target2d + (center2d - target2d) / distance * average;
+                    distances.update(distance);
+                    center2d = target2d + (center2d - target2d) / distance * distances.avrage();
 
                     cv::Mat show = image->image;
                     cv::circle(
