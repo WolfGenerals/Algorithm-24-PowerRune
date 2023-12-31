@@ -15,12 +15,16 @@ public:
             cache.pop_front();
     }
 
-    T avrage() const{
+    [[nodiscard]] T avrage() const{
         return accumulate(cache.begin(), cache.end(), T{}) / static_cast<double>(cache.size());
     }
 
     [[nodiscard]] bool empty() const{
         return cache.empty();
+    }
+
+    [[nodiscard]] T last() const {
+        return cache.back();
     }
 
 };

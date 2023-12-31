@@ -6,14 +6,24 @@
 #include "geometry_msgs/msg/point_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
 
 using namespace std;
+using namespace cv;
 using namespace rclcpp;
 using geometry_msgs::msg::PointStamped;
 using ImageMsg = sensor_msgs::msg::Image;
+using std_msgs::msg::Float64MultiArray;
 
+double rotation(const Vec3 axis,const Vec3 from,const Vec3 to) {
+    return asin(
+        Mat{from}.cross(to).dot(axis) /
+        sqrt(from(0) * from(0) + from(1) * from(1) + from(2) * from(2) - from.ddot(axis) * from.ddot(axis)) /
+        sqrt(to(0) * to(0) + to(1) * to(1) + to(2) * to(2) - to.ddot(axis) * to.ddot(axis))
+    );
+};
 
-class PowerRuneNode final : public Node {
+class PowerRuneNode final : public rclcpp::Node {
     vector<double> _world_target = declare_parameter("world_target", vector<double>());
     vector<double> _world_center = declare_parameter("world_center", vector<double>());
     vector<double> _image_target = declare_parameter("image_target", vector<double>());
@@ -38,7 +48,7 @@ class PowerRuneNode final : public Node {
         for (int i = 0; i < rawData.size(); i += 3) {
             points.emplace_back(rawData[i], rawData[i + 1], rawData[i + 2]);
         }
-        return move(points);
+        return points;
     };
 
     std::vector<Vec2> image_points() const {
@@ -54,7 +64,7 @@ class PowerRuneNode final : public Node {
         for (int i = 0; i < rawData.size(); i += 2) {
             points.emplace_back(rawData[i], rawData[i + 1]);
         }
-        return move(points);
+        return points;
     };
 
     Vec3 world_target() const {
@@ -141,10 +151,12 @@ class PowerRuneNode final : public Node {
         return *sourceFeature;
     };
 
-    cv::Matx33f           cameraMatrix;
-    cv::Matx<float, 1, 5> distCoeffs;
+   Matx33f           cameraMatrix;
+   Matx<float, 1, 5> distCoeffs;
 
     Cache<double> distances{history_size()};
+    Vec2 lastArm{1,0};
+    double lastTime{0};
 
     Publisher<PointStamped>::SharedPtr target_publisher =
             create_publisher<PointStamped>(
@@ -156,6 +168,12 @@ class PowerRuneNode final : public Node {
                 "center",
                 10
             );
+    Publisher<Float64MultiArray>::SharedPtr angularVelocity_publisher =
+                create_publisher<Float64MultiArray>(
+                "angular_velocity",
+                10
+            );
+
     Subscription<ImageMsg>::SharedPtr image_subscriber =
             create_subscription<ImageMsg>(
                 "/camera",
@@ -181,33 +199,8 @@ class PowerRuneNode final : public Node {
 
                     const double distance = length(target2d - center2d);
                     distances.update(distance);
-                    center2d = target2d + (center2d - target2d) / distance * distances.avrage();
-
-                    cv::Mat show = image->image;
-                    cv::circle(
-                        show,
-                        {static_cast<int>(target2d(0)), static_cast<int>(target2d(1))},
-                        5,
-                        cv::Scalar(255, 0, 255),
-                        -1
-                    );
-                    cv::circle(
-                        show,
-                        {static_cast<int>(center2d(0)), static_cast<int>(center2d(1))},
-                        5,
-                        cv::Scalar(255, 255, 0),
-                        -1
-                    );
-                    for(auto x:*transform*image_points())
-                    cv::circle(
-                        show,
-                        {static_cast<int>(x(0)), static_cast<int>(x(1))},
-                        5,
-                        cv::Scalar(0, 255, 0),
-                        -1
-                    );
-                    imshow("show", show);
-                    cv::waitKey(1);
+                    auto arm =   target2d-center2d;
+                    center2d  = target2d + arm / distance * distances.avrage();
 
                     vector<Vec3> worldPoints = world_points();
                     vector<Vec2> imagePoints = *transform * image_points();
@@ -227,6 +220,11 @@ class PowerRuneNode final : public Node {
                     Vec3 target = transform3D * world_target();
                     Vec3 center = transform3D * world_center();
 
+                    if (length(target)<5.5 || length(center)<5.5)
+                            return;
+                    if (length(target)>7.5 || length(center)>7.5)
+                            return;
+
                     PointStamped taget_msg;
                     taget_msg.point.x = target(0);
                     taget_msg.point.y = target(1);
@@ -240,6 +238,27 @@ class PowerRuneNode final : public Node {
                     center_msg.point.z = center(2);
                     center_msg.header  = imageRos->header;
                     center_publisher->publish(center_msg);
+
+                    double radian = acos(arm.ddot(lastArm) / length(lastArm)/length(arm));
+                    // 判断旋转方向
+                    if (arm(0)*lastArm(1)-arm(1)*lastArm(0) < 0)
+                    radian = -radian;
+
+                    double time=imageRos->header.stamp.sec+imageRos->header.stamp.nanosec/1e9;
+                    radian = radian/(time-lastTime);
+
+                    lastArm = arm;
+                    lastTime = time;
+
+                    if(fabs(radian) < 0.001)
+                        return;
+                    if(fabs(radian) > 2.5)
+                        return;
+
+                    Float64MultiArray angularVelocity_msg;
+                    angularVelocity_msg.data.push_back(time);
+                    angularVelocity_msg.data.push_back(radian);
+                    angularVelocity_publisher->publish(angularVelocity_msg);
 
                 }
             );

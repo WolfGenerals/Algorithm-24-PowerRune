@@ -5,39 +5,38 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
+#include "std_msgs/msg/float64_multi_array.hpp"
 
 
 using namespace std;
 using namespace std::chrono_literals;
 using namespace rclcpp;
 using geometry_msgs::msg::PointStamped;
+using std_msgs::msg::Float64MultiArray;
 using namespace cv;
 
-double rotation(Vec3 axis, Vec3 from, Vec3 to) {
-    return asin(
-        Mat{from}.cross(to).dot(axis) /
-        sqrt(from(0) * from(0) + from(1) * from(1) + from(2) * from(2) - from.ddot(axis) * from.ddot(axis)) /
-        sqrt(to(0) * to(0) + to(1) * to(1) + to(2) * to(2) - to.ddot(axis) * to.ddot(axis))
-    );
-};
+
 
 /**
  * \brief
  */
-class Fit{
+class Fit {
     enum class State {
         SMALL,
         LARGE,
         WAIT_MAXIMUM,
         WAIT_MINIMUM,
     };
-    constexpr double MAX= 2.090;
+
+
+    static constexpr double MAX = 2.090;
 
 public:
-    double A = 0.0;
+    double A     = 0.0;
     double omega = 0.0;
-    double phi = 0.0;
+    double phi   = 0.0;
 };
+
 
 class PredictorNode final : public rclcpp::Node {
     double _send_frequency_Hz = declare_parameter("send_frequency_Hz", 0.0);
@@ -71,16 +70,26 @@ class PredictorNode final : public rclcpp::Node {
 
 
     Vec3 lastTarget;
-    double lastTimestamps;
     Cache<Vec3>   centers{history_size()};
 
     Vec3 axis() const {
         const Vec3 result{centers.avrage()(0), centers.avrage()(1), 0};
         return result / length(result);
     }
+
     Publisher<PointStamped>::SharedPtr publisher =
             create_publisher<PointStamped>("prediction", 10);
 
+
+    Subscription<Float64MultiArray>::SharedPtr angularVelocitySubscriber =
+                create_subscription<Float64MultiArray>(
+                "angular_velocity",
+                10,
+                [this](const Float64MultiArray::SharedPtr msg) -> void {
+                    double time = msg->data[0] - startTimestamp;
+                    double anguqlarVelocity = msg->data[1];
+
+                });
     Subscription<PointStamped>::SharedPtr targetSubscriber =
             create_subscription<PointStamped>(
                 "target",
@@ -97,15 +106,11 @@ class PredictorNode final : public rclcpp::Node {
 
                     const auto pointStamped = buffer.transform(*msg, "base_link");
 
-
-
-
-                    lastTimestamps=pointStamped.header.stamp.sec + pointStamped.header.stamp.nanosec / 1000000000.0 - startTimestamp;
-                    lastTarget={
-                            static_cast<float>(pointStamped.point.x),
-                            static_cast<float>(pointStamped.point.y),
-                            static_cast<float>(pointStamped.point.z)
-                        };
+                    lastTarget = {
+                                static_cast<float>(pointStamped.point.x),
+                                static_cast<float>(pointStamped.point.y),
+                                static_cast<float>(pointStamped.point.z)
+                            };
                 }
             );
     Subscription<PointStamped>::SharedPtr centerSubscriber =
@@ -137,18 +142,8 @@ class PredictorNode final : public rclcpp::Node {
             create_wall_timer(
                 period(),
                 [this]() -> void {
-
-
-
-
-
-
-
-
                     const auto   now              = this->now();
                     const double currentTimestamp = now.seconds() - startTimestamp;
-
-
 
 
                     PointStamped msg;
