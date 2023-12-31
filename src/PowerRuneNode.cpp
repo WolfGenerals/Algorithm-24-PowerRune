@@ -244,8 +244,8 @@ class PowerRuneNode final : public rclcpp::Node {
                     if (arm(0)*lastArm(1)-arm(1)*lastArm(0) < 0)
                     radian = -radian;
 
-                    double time=imageRos->header.stamp.sec+imageRos->header.stamp.nanosec/1e9;
-                    radian = radian/(time-lastTime);
+                    auto time =imageRos->header.stamp.sec+imageRos->header.stamp.nanosec/1e9;
+                    radian    = radian/(time-lastTime);
 
                     lastArm = arm;
                     lastTime = time;

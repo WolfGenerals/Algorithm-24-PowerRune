@@ -15,6 +15,7 @@ using ImageMsg = sensor_msgs::msg::Image;
 
 
 class TestNode final : public Node {
+    Time time = now();
     StaticTransformBroadcaster _staticTransformBroadcaster{this};
     Publisher<ImageMsg>::SharedPtr publisher =
         create_publisher<ImageMsg>("camera", 10);
@@ -23,7 +24,7 @@ class TestNode final : public Node {
             };
     TimerBase::SharedPtr        timer=
         create_wall_timer(
-            100ms,
+            20ms,
             [this]() -> void {
                 if (!capture.isOpened()) {
                     RCLCPP_ERROR(get_logger(), "video capture is not opened");
@@ -31,10 +32,8 @@ class TestNode final : public Node {
                 }
 
                 cv::Mat frame;
-                capture.grab();
-                capture.grab();
-                capture.grab();
-                capture.grab();
+                // capture.grab();
+                // capture.grab();
                 capture >> frame;
                 if (frame.empty()) {
                     RCLCPP_WARN(get_logger(), "frame is empty");
@@ -42,7 +41,8 @@ class TestNode final : public Node {
                 }
                 std_msgs::msg::Header header{};
                 header.frame_id = "camera";
-                header.stamp    = this->now();
+                time+=20ms;
+                header.stamp    = time;
 
                 ImageMsg::SharedPtr imageMsg = cv_bridge::CvImage{
                     header,
