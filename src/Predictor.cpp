@@ -16,7 +16,6 @@ using std_msgs::msg::Float64MultiArray;
 using namespace cv;
 
 
-
 /**
  * \brief
  */
@@ -24,17 +23,52 @@ class Fit {
     enum class State {
         SMALL,
         LARGE,
-        WAIT_MAXIMUM,
-        WAIT_MINIMUM,
     };
 
 
-    static constexpr double MAX = 2.090;
+    struct Recode {
+        double timestamp;
+        double angularVelocity;
+    };
+
+
+    static constexpr double MAX   = 2.090;
+    static constexpr double SMALL = M_PI / 3.0;
+
+    State state = State::SMALL;
+
+    deque<Recode> recodes;
+    Cache<double> times{5};
+    Cache<double> angularVelocities{5};
+
+    //small
+    bool reverse = false;
+
+    // large
+    Cache<double> A{100};
+    Cache<double> omega{100};
+    Cache<double> phi{100};
 
 public:
-    double A     = 0.0;
-    double omega = 0.0;
-    double phi   = 0.0;
+    void update(const double timestamp, const double angularVelocity) {
+        times.update(timestamp);
+        angularVelocities.update(angularVelocity);
+        const double avrage = angularVelocities.avrage();
+        recodes.push_back({times.avrage(), avrage});
+
+        if (avrage < 0) reverse = true;
+
+    }
+
+    double radius(const double from, const double to) const {
+        switch (state) {
+            case State::SMALL:
+                return (reverse ? -SMALL : SMALL) * (to - from);
+            case State::LARGE:
+                break;
+        }
+        return 0;
+    }
 };
 
 
@@ -69,8 +103,10 @@ class PredictorNode final : public rclcpp::Node {
     tf2_ros::TransformListener listener{buffer};
 
 
-    Vec3 lastTarget;
-    Cache<Vec3>   centers{history_size()};
+    Vec3        lastTarget;
+    double      lastTimestamp = 0;
+    Cache<Vec3> centers{history_size()};
+    Fit         fit;
 
     Vec3 axis() const {
         const Vec3 result{centers.avrage()(0), centers.avrage()(1), 0};
@@ -82,14 +118,16 @@ class PredictorNode final : public rclcpp::Node {
 
 
     Subscription<Float64MultiArray>::SharedPtr angularVelocitySubscriber =
-                create_subscription<Float64MultiArray>(
+            create_subscription<Float64MultiArray>(
                 "angular_velocity",
                 10,
                 [this](const Float64MultiArray::SharedPtr msg) -> void {
-                    double time = msg->data[0] - startTimestamp;
-                    double anguqlarVelocity = msg->data[1];
+                    const double time             = msg->data[0] - startTimestamp;
+                    const double anguqlarVelocity = msg->data[1];
 
-                });
+                    fit.update(time, anguqlarVelocity);
+                }
+            );
     Subscription<PointStamped>::SharedPtr targetSubscriber =
             create_subscription<PointStamped>(
                 "target",
@@ -111,6 +149,7 @@ class PredictorNode final : public rclcpp::Node {
                                 static_cast<float>(pointStamped.point.y),
                                 static_cast<float>(pointStamped.point.z)
                             };
+                    lastTimestamp = msg->header.stamp.sec + msg->header.stamp.nanosec / 1e9;
                 }
             );
     Subscription<PointStamped>::SharedPtr centerSubscriber =
@@ -145,13 +184,19 @@ class PredictorNode final : public rclcpp::Node {
                     const auto   now              = this->now();
                     const double currentTimestamp = now.seconds() - startTimestamp;
 
+                    double radius = fit.radius(lastTimestamp, currentTimestamp+delay());
+                    Matx33f rmat;
+                    cv::Rodrigues(axis()*radius,rmat);
+
+                    const auto center     = centers.avrage();
+                    Vec3 prediction = rmat * (lastTarget-center)+center;
 
                     PointStamped msg;
                     msg.header.frame_id = "base_link";
                     msg.header.stamp    = now;
-                    // msg.point.x         = x(currentTimestamp + delay());
-                    // msg.point.y         = y(currentTimestamp + delay());
-                    // msg.point.z         = z(currentTimestamp + delay());
+                    msg.point.x         = prediction(0);
+                    msg.point.y         = prediction(1);
+                    msg.point.z         = prediction(2);
                     publisher->publish(msg);
                 }
             );
