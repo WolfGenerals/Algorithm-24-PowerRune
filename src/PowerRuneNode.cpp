@@ -200,7 +200,7 @@ class PowerRuneNode final : public rclcpp::Node {
                     const double distance = length(target2d - center2d);
                     distances.update(distance);
                     auto arm =   target2d-center2d;
-                    center2d  = target2d + arm / distance * distances.avrage();
+                    center2d  = target2d - arm / distance * distances.avrage();
 
                     vector<Vec3> worldPoints = world_points();
                     vector<Vec2> imagePoints = *transform * image_points();

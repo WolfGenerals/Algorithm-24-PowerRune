@@ -33,6 +33,6 @@ launch:
         - name: send_frequency_Hz
           value: 30.0
         - name: delay_s
-          value: 0.1
+          value: 0.2
         - name: history_size
           value: 50

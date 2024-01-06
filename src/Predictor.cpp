@@ -32,8 +32,8 @@ class Fit {
     };
 
 
-    static constexpr double MAX   = 2.090;
-    static constexpr double SMALL = M_PI / 3.0;
+    static constexpr  double MAX   = 2.090;
+    static constexpr  double SMALL = M_PI / 3.0;
 
     State state = State::SMALL;
 
@@ -57,7 +57,6 @@ public:
         recodes.push_back({times.avrage(), avrage});
 
         if (avrage < 0) reverse = true;
-
     }
 
     double radius(const double from, const double to) const {
@@ -74,10 +73,8 @@ public:
 
 class PredictorNode final : public rclcpp::Node {
     double _send_frequency_Hz = declare_parameter("send_frequency_Hz", 0.0);
-    double _delay_ms          = declare_parameter("delay_ms", 1.0);
+    double _delay_ms          = declare_parameter("delay_s", 1.0);
     long   _history_size      = declare_parameter("history_size", 100);
-
-    double startTimestamp = now().seconds();
 
     duration<double> period() const {
         double frequency;
@@ -109,7 +106,7 @@ class PredictorNode final : public rclcpp::Node {
     Fit         fit;
 
     Vec3 axis() const {
-        const Vec3 result{centers.avrage()(0), centers.avrage()(1), 0};
+        const Vec3 result{-centers.avrage()(0), -centers.avrage()(1), 0};
         return result / length(result);
     }
 
@@ -122,7 +119,7 @@ class PredictorNode final : public rclcpp::Node {
                 "angular_velocity",
                 10,
                 [this](const Float64MultiArray::SharedPtr msg) -> void {
-                    const double time             = msg->data[0] - startTimestamp;
+                    const double time             = msg->data[0];
                     const double anguqlarVelocity = msg->data[1];
 
                     fit.update(time, anguqlarVelocity);
@@ -182,14 +179,17 @@ class PredictorNode final : public rclcpp::Node {
                 period(),
                 [this]() -> void {
                     const auto   now              = this->now();
-                    const double currentTimestamp = now.seconds() - startTimestamp;
+                    const double currentTimestamp = now.seconds();
 
-                    double radius = fit.radius(lastTimestamp, currentTimestamp+delay());
+                    // lastTimestamp = currentTimestamp;
+
+                    double radius = fit.radius(lastTimestamp, currentTimestamp + delay());
+
                     Matx33f rmat;
-                    cv::Rodrigues(axis()*radius,rmat);
+                    cv::Rodrigues(axis() * radius, rmat);
 
                     const auto center     = centers.avrage();
-                    Vec3 prediction = rmat * (lastTarget-center)+center;
+                    Vec3       prediction = rmat * (lastTarget - center) + center;
 
                     PointStamped msg;
                     msg.header.frame_id = "base_link";
