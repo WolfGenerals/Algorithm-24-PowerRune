@@ -3,7 +3,7 @@
 template<typename T>
 class Cache {
     std::deque<T> cache;
-    int size;
+    unsigned int size;
 
 public:
     explicit Cache(const int size)

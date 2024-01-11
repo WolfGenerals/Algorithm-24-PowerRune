@@ -18,7 +18,7 @@ class TestNode final : public Node {
     Time time = now();
     StaticTransformBroadcaster _staticTransformBroadcaster{this};
     Publisher<ImageMsg>::SharedPtr publisher =
-        create_publisher<ImageMsg>("camera", 10);
+        create_publisher<ImageMsg>("/image_raw", 10);
     cv::VideoCapture           capture{
                 "/mnt/c/Projects/C/Algorithm-24/src/power_rune/temp/关灯-红方大能量机关-失败后激活成功的全激活过程.MP4"
             };
@@ -40,7 +40,7 @@ class TestNode final : public Node {
                     return;
                 }
                 std_msgs::msg::Header header{};
-                header.frame_id = "camera";
+                header.frame_id = "camera_link";
                 time+=20ms;
                 header.stamp    = now();
 
@@ -59,8 +59,8 @@ public:
 
         geometry_msgs::msg::TransformStamped transformStamped;
         transformStamped.header.stamp            = this->now();
-        transformStamped.header.frame_id         = "base_link";
-        transformStamped.child_frame_id          = "camera";
+        transformStamped.header.frame_id         = "odom";
+        transformStamped.child_frame_id          = "camera_link";
         transformStamped.transform.translation.x = 0.0;
         transformStamped.transform.translation.y = 0.0;
         transformStamped.transform.translation.z = 0.0;
