@@ -3,6 +3,7 @@ launch:
   - node:
       pkg: power_rune
       exec: detector
+      namespace: power_rune
       param:
         - name: world_target
           value: [ 0.0, 0.0, 0.7 ]
@@ -29,6 +30,7 @@ launch:
   - node:
       pkg: power_rune
       exec: predictor
+      namespace: power_rune
       param:
         - name: send_frequency_Hz
           value: 30.0

@@ -25,10 +25,12 @@ class Fit {
         LARGE,
     };
 
+
     struct Recode {
         double timestamp;
         double angularVelocity;
     };
+
 
     static constexpr  double MAX   = 2.090;
     static constexpr  double SMALL = M_PI / 3.0;
@@ -109,7 +111,7 @@ class PredictorNode final : public rclcpp::Node {
     }
 
     Publisher<PointStamped>::SharedPtr publisher =
-            create_publisher<PointStamped>("prediction", 10);
+            create_publisher<PointStamped>("/prediction", 10);
 
 
     Subscription<Float64MultiArray>::SharedPtr angularVelocitySubscriber =

@@ -59,26 +59,5 @@ install(TARGETS detector
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch
         DESTINATION share/${PROJECT_NAME})
-install(DIRECTORY temp
-        DESTINATION lib/${PROJECT_NAME})
-
-
-add_executable(video
-        src/TestVideo.cpp
-)
-ament_target_dependencies(
-        video
-        "rclcpp"
-        "sensor_msgs"
-        "cv_bridge"
-        "OpenCV"
-        geometry_msgs
-        tf2
-        tf2_ros
-        tf2_geometry_msgs
-)
-install(TARGETS video
-        DESTINATION lib/${PROJECT_NAME})
-
 
 ament_package()
