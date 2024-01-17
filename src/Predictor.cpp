@@ -131,7 +131,7 @@ class PredictorNode final : public rclcpp::Node {
                 10,
                 [this](const PointStamped::SharedPtr msg) -> void {
                     if (!buffer.canTransform(
-                        "odom",
+                        "gimbal_link",
                         msg->header.frame_id,
                         tf2::TimePointZero
                     )) {
@@ -155,7 +155,7 @@ class PredictorNode final : public rclcpp::Node {
                 10,
                 [this](const PointStamped::SharedPtr msg) -> void {
                     if (!buffer.canTransform(
-                        "odom",
+                        "gimbal_link",
                         msg->header.frame_id,
                         tf2::TimePointZero
                     )) {
@@ -192,7 +192,7 @@ class PredictorNode final : public rclcpp::Node {
                     Vec3       prediction = rmat * (lastTarget - center) + center;
 
                     PointStamped msg;
-                    msg.header.frame_id = "odom";
+                    msg.header.frame_id = "gimbal_link";
                     msg.header.stamp    = now;
                     msg.point.x         = prediction(0);
                     msg.point.y         = prediction(1);
