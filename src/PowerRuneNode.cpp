@@ -1,6 +1,3 @@
-#include <cstdio>
-#include <sensor_msgs/msg/detail/camera_info__struct.hpp>
-
 #include "Alias.hpp"
 #include "Cache.hpp"
 #include "Converter/Transform.hpp"
@@ -8,6 +5,7 @@
 #include "geometry_msgs/msg/point_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
 
 using namespace std;
@@ -17,14 +15,6 @@ using geometry_msgs::msg::PointStamped;
 using ImageMsg = sensor_msgs::msg::Image;
 using sensor_msgs::msg::CameraInfo;
 using std_msgs::msg::Float64MultiArray;
-
-double rotation(const Vec3 axis, const Vec3 from, const Vec3 to) {
-    return asin(
-        Mat{from}.cross(to).dot(axis) /
-        sqrt(from(0) * from(0) + from(1) * from(1) + from(2) * from(2) - from.ddot(axis) * from.ddot(axis)) /
-        sqrt(to(0) * to(0) + to(1) * to(1) + to(2) * to(2) - to.ddot(axis) * to.ddot(axis))
-    );
-};
 
 
 class PowerRuneNode final : public rclcpp::Node {
@@ -36,6 +26,8 @@ class PowerRuneNode final : public rclcpp::Node {
     vector<double> _image_points = declare_parameter("image_points", vector<double>());
     long           _history_size = declare_parameter("history_size", 10);
     string         _source_image = declare_parameter("source_image", "null");
+    bool           _save_images  = declare_parameter("save_images", false);
+    string         _save_path    = declare_parameter("save_path", "~/catch.png");
 
     shared_ptr<Feature> sourceFeature = nullptr;
 
@@ -51,7 +43,7 @@ class PowerRuneNode final : public rclcpp::Node {
 
         for (unsigned long i = 0; i < rawData.size(); i += 3) { points.emplace_back(rawData[i], rawData[i + 1], rawData[i + 2]); }
         return points;
-    };
+    }
 
     std::vector<Vec2> image_points() const {
         vector<Vec2>   points;
@@ -65,7 +57,7 @@ class PowerRuneNode final : public rclcpp::Node {
 
         for (unsigned long i = 0; i < rawData.size(); i += 2) { points.emplace_back(rawData[i], rawData[i + 1]); }
         return points;
-    };
+    }
 
     Vec3 world_target() const {
         vector<double> rawData;
@@ -81,7 +73,7 @@ class PowerRuneNode final : public rclcpp::Node {
                     static_cast<float>(rawData[1]),
                     static_cast<float>(rawData[2])
                 };
-    };
+    }
 
     Vec3 world_center() const {
         vector<double> rawData;
@@ -97,7 +89,7 @@ class PowerRuneNode final : public rclcpp::Node {
                     static_cast<float>(rawData[1]),
                     static_cast<float>(rawData[2])
                 };
-    };
+    }
 
     Vec2 image_target() const {
         vector<double> rawData;
@@ -112,7 +104,7 @@ class PowerRuneNode final : public rclcpp::Node {
                     static_cast<float>(rawData[0]),
                     static_cast<float>(rawData[1])
                 };
-    };
+    }
 
     Vec2 image_center() const {
         vector<double> rawData;
@@ -127,13 +119,13 @@ class PowerRuneNode final : public rclcpp::Node {
                     static_cast<float>(rawData[0]),
                     static_cast<float>(rawData[1])
                 };
-    };
+    }
 
     int history_size() const {
         int size;
         get_parameter("history_size", size);
         return size;
-    };
+    }
 
     Feature source_feature() {
         if (sourceFeature != nullptr) { return *sourceFeature; }
@@ -149,7 +141,19 @@ class PowerRuneNode final : public rclcpp::Node {
         cvtColor(image, image, cv::COLOR_BGR2GRAY);
         sourceFeature = std::make_shared<Feature>(Feature::of(image));
         return *sourceFeature;
-    };
+    }
+
+    bool save_image() const {
+        bool save;
+        get_parameter("save_image", save);
+        return save;
+    }
+
+    string save_path() const {
+        string path;
+        get_parameter("save_path", path);
+        return path;
+    }
 
     Matx33f           cameraMatrix;
     Matx<float, 1, 5> distCoeffs;
@@ -210,6 +214,12 @@ class PowerRuneNode final : public rclcpp::Node {
                     if (image->image.empty()) {
                         RCLCPP_WARN(get_logger(), "image is empty");
                         return;
+                    }
+
+                    if (save_image()) {
+                        imwrite(save_path(), image->image);
+                        set_parameter(Parameter{"save_image", false});
+                        RCLCPP_INFO(get_logger(), "save image to: %s", save_path().c_str());
                     }
 
                     Image grayImage;
