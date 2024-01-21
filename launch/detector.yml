@@ -1,0 +1,42 @@
+#file: noinspection YAMLIncompatibleTypes
+launch:
+  - node:
+      pkg: power_rune
+      exec: detector
+      namespace: power_rune
+      param:
+        - name: world_target
+          value: [ 0.0, 0.0, 0.7 ]
+        - name: world_center
+          value: [ 0.0, 0.0, 0.0 ]
+        - name: image_target
+          value: [ 107.50,296.50]
+        - name: image_center
+          value: [ 112.86,78.000 ]
+        - name: world_points
+          value: [
+            0.0,0.150,0.7,
+            0.0,-0.15,0.7,
+          ]
+        - name: image_points
+          value: [
+            62.250,296.50,
+            156.75,296.50,
+          ]
+        - name: history_size
+          value: 40
+        - name: source_image
+          value: /mnt/c/Projects/C/Algorithm-24/src/power_rune/temp/img.png
+        - name: save_path
+          value: /mnt/c/Projects/C/Algorithm-24/src/power_rune/temp/save.png
+  - node:
+      pkg: power_rune
+      exec: predictor
+      namespace: power_rune
+      param:
+        - name: send_frequency_Hz
+          value: 30.0
+        - name: delay_s
+          value: 0.2
+        - name: history_size
+          value: 50
