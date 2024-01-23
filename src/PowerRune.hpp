@@ -49,7 +49,7 @@ struct FanBlade {
 struct PowerRune {
     FanBlade fanBlades[5]; /** \brief 扇叶 */
 
-    double speed = 0.0;//弧度/毫秒
+    double speed = 0.0;//弧度/秒
 
     /** 更新叶片长度 */
     void updateLength(const double length) {
@@ -81,7 +81,7 @@ struct PowerRune {
     }
 
 
-    void update(const std::vector<FanBlade>& fanBlades, const std::chrono::milliseconds duration_sec) {
+    void update(const std::vector<FanBlade>& fanBlades, const std::chrono::milliseconds duration) {
         //如果没有亮起的扇叶，则跳过更新
         if (fanBlades.empty())
             return;
@@ -100,7 +100,7 @@ struct PowerRune {
         updateLength(length);
         updateAngle(angle);
         // 计算转速
-        speed = angle / duration_sec.count();
+        speed = angle*1000 / duration.count();
         // 更新叶片状态
         //如果只有一个亮起的叶片且亮起的叶片改变，则认为能量机关激活状态已经重置
         if (fanBlades.size() == 1) {

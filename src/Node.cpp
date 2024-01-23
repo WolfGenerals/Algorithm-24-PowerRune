@@ -102,8 +102,6 @@ private:
                 circle(out, icons->position + offset, 5, color, -1);
             }
             tracker_publisher.publish(cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
-            imshow("test", out);
-            waitKey(1);
         }
         // DEBUG
         if (config.DEBUG()) {
