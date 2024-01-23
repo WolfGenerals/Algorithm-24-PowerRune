@@ -1,6 +1,5 @@
 #include "cv_bridge/cv_bridge.h"
 #include "geometry_msgs/msg/point_stamped.hpp"
-#include "image_transport/image_transport.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
@@ -26,29 +25,21 @@ using sensor_msgs::msg::CameraInfo;
 using std_msgs::msg::Float64;
 
 
-class PowerRuneNode final {
-public:
-    std::shared_ptr<rclcpp::Node> node;
+class PowerRuneNode final : public rclcpp::Node {
+    Configuration config{*this};
 
-    explicit PowerRuneNode(const std::shared_ptr<rclcpp::Node>& node)
-        : node(node) {}
-
-private:
-    Configuration config{node};
-
-    tf2_ros::Buffer            buffer{node->get_clock()};
+    tf2_ros::Buffer            buffer{get_clock()};
     tf2_ros::TransformListener listener{buffer};
 
 
     Publisher<PointStamped>::SharedPtr publisher =
-            node->create_publisher<PointStamped>("/prediction", 10);
+            create_publisher<PointStamped>("/prediction", 10);
 
-    image_transport::ImageTransport image_transport_{node};
-    image_transport::Publisher      binary_publisher  = image_transport_.advertise("DEBUG_binary", 10);
-    image_transport::Publisher      ricon_publisher   = image_transport_.advertise("DEBUG_ricon", 10);
-    image_transport::Publisher      mask_publisher    = image_transport_.advertise("DEBUG_mask", 10);
-    image_transport::Publisher      tracker_publisher = image_transport_.advertise("DEBUG_tracker", 10);
-    Publisher<Float64>::SharedPtr   speed_publisher   = node->create_publisher<Float64>("DEBUG_speed", 10);
+    Publisher<ImageMsg>::SharedPtr binary_publisher  = create_publisher<ImageMsg>("DEBUG_binary", 10);
+    Publisher<ImageMsg>::SharedPtr ricon_publisher   = create_publisher<ImageMsg>("DEBUG_ricon", 10);
+    Publisher<ImageMsg>::SharedPtr mask_publisher    = create_publisher<ImageMsg>("DEBUG_mask", 10);
+    Publisher<ImageMsg>::SharedPtr tracker_publisher = create_publisher<ImageMsg>("DEBUG_tracker", 10);
+    Publisher<Float64>::SharedPtr  speed_publisher   = create_publisher<Float64>("DEBUG_speed", 10);
 
     Binarizer        binarizer{config};
     RIconDetector    riconDetector{config};
@@ -60,7 +51,7 @@ private:
         const Mat binary = binarizer.binary(image);
         // DEBUG
         if (config.DEBUG())
-            binary_publisher.publish(cv_bridge::CvImage(header, "mono8", binary).toImageMsg());
+            binary_publisher->publish(*cv_bridge::CvImage(header, "mono8", binary).toImageMsg());
         const optional<RIcon> icons = riconDetector.detect(binary);
         if (!icons) return;
         // DEBUG
@@ -69,7 +60,7 @@ private:
             circle(out, icons->position, static_cast<int>(icons->range), Scalar(0, 255, 255), 3);
             circle(out, icons->position, static_cast<int>(config.R标最大半径()), Scalar(255, 255, 255), 3);
             circle(out, icons->position, static_cast<int>(config.R标最小半径()), Scalar(255, 255, 255), 3);
-            ricon_publisher.publish(cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
+            ricon_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
         const Mat masked = masker.mask(icons->position, binary);
         // DEBUG
@@ -77,10 +68,13 @@ private:
             Mat out = image.clone();
             circle(out, icons->position, config.外圈半径(), Scalar(0, 255, 255), 3);
             circle(out, icons->position, config.内圈半径(), Scalar(0, 255, 255), 3);
-            mask_publisher.publish(cv_bridge::CvImage(header, "bgr8", masked).toImageMsg());
+            mask_publisher->publish(*cv_bridge::CvImage(header, "bgr8", masked).toImageMsg());
         }
         const auto                fanBlades = fanBladeDetector.detect(icons->position, masked);
-        const optional<PowerRune> rune      = runeTracker.track(fanBlades,std::chrono::milliseconds{header.stamp.sec*1000 + header.stamp.nanosec/1000000});
+        const optional<PowerRune> rune      = runeTracker.track(
+            fanBlades,
+            std::chrono::milliseconds{header.stamp.sec * 1000 + header.stamp.nanosec / 1000000}
+        );
         if (!rune) return;
         // DEBUG
         if (config.DEBUG()) {
@@ -101,7 +95,7 @@ private:
                 }
                 circle(out, icons->position + offset, 5, color, -1);
             }
-            tracker_publisher.publish(cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
+            tracker_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
         // DEBUG
         if (config.DEBUG()) {
@@ -112,7 +106,7 @@ private:
     }
 
     Subscription<ImageMsg>::SharedPtr image_subscriber =
-            node->create_subscription<ImageMsg>(
+            create_subscription<ImageMsg>(
                 "/image_raw",
                 10,
                 [this](const ImageMsg::SharedPtr imageRos) -> void {
@@ -123,12 +117,14 @@ private:
                     progress(image->image, imageRos->header);
                 }
             );
+
+public:
+    PowerRuneNode() : Node("node") {}
 };
 
 
 int main(const int argc, char** argv) {
     init(argc, argv);
-    const PowerRuneNode powerRuneNode(make_shared<rclcpp::Node>("node"));
-    spin(powerRuneNode.node);
+    spin(make_shared<PowerRuneNode>());
     return 0;
 }
