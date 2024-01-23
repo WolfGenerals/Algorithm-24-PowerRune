@@ -14,48 +14,32 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
+find_package(image_transport REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-add_executable(detector
-        src/PowerRuneNode.cpp
-        src/Alias.hpp
-        src/RuneRecognizer/Feature.hpp
-        src/RuneRecognizer/Matches.hpp
-)
 include_directories(
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
-
+add_executable(node
+        src/Node.cpp
+)
 ament_target_dependencies(
-        detector
+        node
         rclcpp
         std_msgs
         sensor_msgs
         geometry_msgs
         cv_bridge
-        OpenCV
-)
-
-add_executable(
-        predictor
-        src/Predictor.cpp
-)
-ament_target_dependencies(
-        predictor
-        rclcpp
-        std_msgs
-        geometry_msgs
+        image_transport
         OpenCV
         tf2
         tf2_ros
         tf2_geometry_msgs
 )
-install(TARGETS predictor
-        DESTINATION lib/${PROJECT_NAME})
-install(TARGETS detector
+install(TARGETS node
         DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch
         DESTINATION share/${PROJECT_NAME})
