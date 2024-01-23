@@ -8,7 +8,7 @@ launch:
         - name: enable
           value: true
         - name: DEBUG
-          value: false
+          value: true
         - name: 二值化阈值
           value: 200
         - name: R标最大长宽比

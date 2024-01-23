@@ -41,6 +41,24 @@ ament_target_dependencies(
 )
 install(TARGETS node
         DESTINATION lib/${PROJECT_NAME})
+add_executable(t
+        src/TEST.cpp
+)
+ament_target_dependencies(
+        t
+        rclcpp
+        std_msgs
+        sensor_msgs
+        geometry_msgs
+        cv_bridge
+        image_transport
+        OpenCV
+        tf2
+        tf2_ros
+        tf2_geometry_msgs
+)
+install(TARGETS t
+        DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch
         DESTINATION share/${PROJECT_NAME})
 

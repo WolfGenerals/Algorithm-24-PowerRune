@@ -26,22 +26,29 @@ using sensor_msgs::msg::CameraInfo;
 using std_msgs::msg::Float64;
 
 
-class PowerRuneNode final : public rclcpp::Node {
-    Configuration config{*this};
+class PowerRuneNode final {
+public:
+    std::shared_ptr<rclcpp::Node> node;
 
-    tf2_ros::Buffer            buffer{get_clock()};
+    explicit PowerRuneNode(const std::shared_ptr<rclcpp::Node>& node)
+        : node(node) {}
+
+private:
+    Configuration config{node};
+
+    tf2_ros::Buffer            buffer{node->get_clock()};
     tf2_ros::TransformListener listener{buffer};
 
 
     Publisher<PointStamped>::SharedPtr publisher =
-            create_publisher<PointStamped>("/prediction", 10);
+            node->create_publisher<PointStamped>("/prediction", 10);
 
-    image_transport::ImageTransport image_transport_{shared_from_this()};
-    image_transport::Publisher      binary_publisher         = image_transport_.advertise("DEBUG_binary", 10);
-    image_transport::Publisher      ricon_publisher          = image_transport_.advertise("DEBUG_ricon", 10);
-    image_transport::Publisher      mask_publisher           = image_transport_.advertise("DEBUG_mask", 10);
-    image_transport::Publisher      tracker_publisher        = image_transport_.advertise("DEBUG_tracker", 10);
-    Publisher<Float64>::SharedPtr   speed_publisher = create_publisher<Float64>("DEBUG_speed", 10);
+    image_transport::ImageTransport image_transport_{node};
+    image_transport::Publisher      binary_publisher  = image_transport_.advertise("DEBUG_binary", 10);
+    image_transport::Publisher      ricon_publisher   = image_transport_.advertise("DEBUG_ricon", 10);
+    image_transport::Publisher      mask_publisher    = image_transport_.advertise("DEBUG_mask", 10);
+    image_transport::Publisher      tracker_publisher = image_transport_.advertise("DEBUG_tracker", 10);
+    Publisher<Float64>::SharedPtr   speed_publisher   = node->create_publisher<Float64>("DEBUG_speed", 10);
 
     Binarizer        binarizer{config};
     RIconDetector    riconDetector{config};
@@ -73,7 +80,7 @@ class PowerRuneNode final : public rclcpp::Node {
             mask_publisher.publish(cv_bridge::CvImage(header, "bgr8", masked).toImageMsg());
         }
         const auto                fanBlades = fanBladeDetector.detect(icons->position, masked);
-        const optional<PowerRune> rune      = runeTracker.track(fanBlades, header.stamp.sec + header.stamp.nanosec / 10E9);
+        const optional<PowerRune> rune      = runeTracker.track(fanBlades,std::chrono::milliseconds{header.stamp.sec*1000 + header.stamp.nanosec/1000000});
         if (!rune) return;
         // DEBUG
         if (config.DEBUG()) {
@@ -95,6 +102,8 @@ class PowerRuneNode final : public rclcpp::Node {
                 circle(out, icons->position + offset, 5, color, -1);
             }
             tracker_publisher.publish(cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
+            imshow("test", out);
+            waitKey(1);
         }
         // DEBUG
         if (config.DEBUG()) {
@@ -105,7 +114,7 @@ class PowerRuneNode final : public rclcpp::Node {
     }
 
     Subscription<ImageMsg>::SharedPtr image_subscriber =
-            create_subscription<ImageMsg>(
+            node->create_subscription<ImageMsg>(
                 "/image_raw",
                 10,
                 [this](const ImageMsg::SharedPtr imageRos) -> void {
@@ -116,15 +125,12 @@ class PowerRuneNode final : public rclcpp::Node {
                     progress(image->image, imageRos->header);
                 }
             );
-
-public:
-    explicit PowerRuneNode(): Node("power_rune") {}
 };
 
 
 int main(const int argc, char** argv) {
     init(argc, argv);
-    const auto powerRuneNode = std::make_shared<PowerRuneNode>();
-    spin(powerRuneNode);
+    const PowerRuneNode powerRuneNode(make_shared<rclcpp::Node>("node"));
+    spin(powerRuneNode.node);
     return 0;
 }
