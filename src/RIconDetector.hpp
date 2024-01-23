@@ -33,7 +33,7 @@ public:
             if (range < config.R标最小半径() || range > config.R标最大半径())
                 continue;
 
-            return RIcon{rect.center, rect.size.height / 2};
+            return RIcon{rect.center, range};
         };
         return std::nullopt;
     };

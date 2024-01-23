@@ -57,9 +57,9 @@ class PowerRuneNode final : public rclcpp::Node {
         // DEBUG
         if (config.DEBUG()) {
             Mat out = image.clone();
-            circle(out, icons->position, static_cast<int>(icons->range), Scalar(0, 255, 255), 3);
-            circle(out, icons->position, static_cast<int>(config.R标最大半径()), Scalar(255, 255, 255), 3);
-            circle(out, icons->position, static_cast<int>(config.R标最小半径()), Scalar(255, 255, 255), 3);
+            circle(out, icons->position, static_cast<int>(icons->range), Scalar(0, 255, 0), 1);
+            circle(out, icons->position, static_cast<int>(config.R标最大半径()), Scalar(255, 255, 255), 1);
+            circle(out, icons->position, static_cast<int>(config.R标最小半径()), Scalar(255, 255, 255), 1);
             ricon_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
         const Mat masked = masker.mask(icons->position, binary);
@@ -68,7 +68,7 @@ class PowerRuneNode final : public rclcpp::Node {
             Mat out = image.clone();
             circle(out, icons->position, config.外圈半径(), Scalar(0, 255, 255), 3);
             circle(out, icons->position, config.内圈半径(), Scalar(0, 255, 255), 3);
-            mask_publisher->publish(*cv_bridge::CvImage(header, "bgr8", masked).toImageMsg());
+            mask_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
         const auto                fanBlades = fanBladeDetector.detect(icons->position, masked);
         const optional<PowerRune> rune      = runeTracker.track(
