@@ -20,6 +20,7 @@ public:
     [[nodiscard]] int    外圈半径() const { return node.get_parameter("外圈半径").as_int(); }
     [[nodiscard]] int    扇叶外缘最小面积() const { return node.get_parameter("扇叶外缘最小面积").as_int(); }
     [[nodiscard]] double 外缘靶心半径比() const { return node.get_parameter("轮廓靶心半径比").as_double(); }
+    [[nodiscard]] double 命中延迟_秒() const { return node.get_parameter("命中延迟_秒").as_double(); }
 
     [[nodiscard]] cv::Matx33d            cameraMatrix() const { return cameraMatrix_; }
     [[nodiscard]] cv::Matx<double, 1, 5> distCoeffs() const { return distCoeffs_; }
@@ -36,6 +37,7 @@ public:
         node.declare_parameter("外圈半径", 220);
         node.declare_parameter("扇叶外缘最小面积", 100);
         node.declare_parameter("轮廓靶心半径比", 0.85);
+        node.declare_parameter("命中延迟_秒", 0.2);
 
         cameraInfo_subscriber = node.create_subscription<sensor_msgs::msg::CameraInfo>(
             "camera_info",

@@ -15,6 +15,7 @@
 #include "PowerRune.hpp"
 #include "RIconDetector.hpp"
 #include "RuneTracker.hpp"
+#include "Transformer3D.hpp"
 
 using namespace std;
 using namespace cv;
@@ -32,20 +33,23 @@ class PowerRuneNode final : public rclcpp::Node {
     tf2_ros::TransformListener listener{buffer};
 
 
-    Publisher<PointStamped>::SharedPtr publisher =
+    Publisher<PointStamped>::SharedPtr prediction_publisher =
             create_publisher<PointStamped>("/prediction", 10);
 
-    Publisher<ImageMsg>::SharedPtr binary_publisher  = create_publisher<ImageMsg>("DEBUG_binary", 10);
-    Publisher<ImageMsg>::SharedPtr ricon_publisher   = create_publisher<ImageMsg>("DEBUG_ricon", 10);
-    Publisher<ImageMsg>::SharedPtr mask_publisher    = create_publisher<ImageMsg>("DEBUG_mask", 10);
-    Publisher<ImageMsg>::SharedPtr tracker_publisher = create_publisher<ImageMsg>("DEBUG_tracker", 10);
-    Publisher<Float64>::SharedPtr  speed_publisher   = create_publisher<Float64>("DEBUG_speed", 10);
+    Publisher<ImageMsg>::SharedPtr binary_publisher         = create_publisher<ImageMsg>("DEBUG_binary", 10);
+    Publisher<ImageMsg>::SharedPtr ricon_publisher          = create_publisher<ImageMsg>("DEBUG_ricon", 10);
+    Publisher<ImageMsg>::SharedPtr mask_publisher           = create_publisher<ImageMsg>("DEBUG_mask", 10);
+    Publisher<ImageMsg>::SharedPtr powe_runer_2d_publisher  = create_publisher<ImageMsg>("DEBUG_powe_rune_2d", 10);
+    Publisher<Float64>::SharedPtr  speed_publisher          = create_publisher<Float64>("DEBUG_speed", 10);
+    Publisher<Float64>::SharedPtr  acceleration_publisher   = create_publisher<Float64>("DEBUG_acceleration", 10);
+    Publisher<ImageMsg>::SharedPtr preditction_2d_publisher = create_publisher<ImageMsg>("DEBUG_preditction_2d", 10);
 
     Binarizer        binarizer{config};
     RIconDetector    riconDetector{config};
     Masker           masker{config};
     FanBladeDetector fanBladeDetector{config};
     RuneTracker      runeTracker{config};
+    Transformer3D    transformer{config};
 
     void progress(const Mat& image, const std_msgs::msg::Header& header) {
         const Mat binary = binarizer.binary(image);
@@ -70,16 +74,15 @@ class PowerRuneNode final : public rclcpp::Node {
             circle(out, icons->position, config.内圈半径(), Scalar(0, 255, 255), 3);
             mask_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
-        const auto                fanBlades = fanBladeDetector.detect(icons->position, masked);
-        const optional<PowerRune> rune      = runeTracker.track(
-            fanBlades,
-            std::chrono::milliseconds{header.stamp.sec * 1000 + header.stamp.nanosec / 1000000}
-        );
-        if (!rune) return;
+        const auto fanBlades = fanBladeDetector.detect(icons->position, masked);
+        runeTracker.track(fanBlades, std::chrono::milliseconds{header.stamp.sec * 1000 + header.stamp.nanosec / 1000000});
+        if (runeTracker.state == RuneTracker::State::LOST) return;
+        const PowerRune rune = runeTracker.rune;
         // DEBUG
         if (config.DEBUG()) {
             Mat out = image.clone();
-            for (const auto& [offset, state]: rune.value().fanBlades) {
+            circle(out, icons->position, static_cast<int>(icons->range), Scalar(0, 255, 0), 3);
+            for (const auto& [offset, state]: rune.fanBlades) {
                 Scalar color{255};
                 switch (state) {
                     case RuneState::INACTIVE:
@@ -95,14 +98,57 @@ class PowerRuneNode final : public rclcpp::Node {
                 }
                 circle(out, icons->position + offset, 5, color, -1);
             }
-            tracker_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
+            powe_runer_2d_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
         // DEBUG
         if (config.DEBUG()) {
             Float64 speedMsg;
-            speedMsg.data = rune.value().speed;
+            speedMsg.data = rune.speed;
             speed_publisher->publish(speedMsg);
         }
+        // DEBUG
+        if (config.DEBUG()) {
+            Float64 accelerationMsg;
+            accelerationMsg.data = rune.acceleration;
+            acceleration_publisher->publish(accelerationMsg);
+        }
+        PowerRune prediction = rune;
+        prediction.updateAngle(rune.speed * config.命中延迟_秒());
+        // DEBUG
+        if (config.DEBUG()) {
+            Mat out = image.clone();
+            circle(out, icons->position, static_cast<int>(icons->range), Scalar(0, 255, 0), 3);
+            for (const auto& [offset, state]: prediction.fanBlades) {
+                Scalar color{255};
+                switch (state) {
+                    case RuneState::INACTIVE:
+                        color = Scalar(255, 0, 0);
+                        break;
+                    case RuneState::ACTIVE:
+                        color = Scalar(255, 255, 0);
+                        break;
+                    case RuneState::DISABLED:
+                        color = Scalar(0, 255, 255);
+                        break;
+                    default: ;
+                }
+                circle(out, icons->position + offset, 5, color, -1);
+            }
+            preditction_2d_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
+        }
+
+        std::optional<FanBlade> targe = prediction.targe();
+        if (!targe) return;
+        Point3d      direction = transformer.direction(targe->offset + icons->position);
+        double       distance  = transformer.distance(rune.length, 0.7);
+        PointStamped predictionMsg;
+        predictionMsg.header          = header;
+        predictionMsg.header.frame_id = "camera_link";
+        predictionMsg.point.x         = direction.x * distance;
+        predictionMsg.point.y         = direction.y * distance;
+        predictionMsg.point.z         = direction.z * distance;
+        if (!buffer.canTransform("camera_link", "odom",header.stamp, tf2::Duration::zero()))return;
+        prediction_publisher->publish(buffer.transform(predictionMsg, "odom", tf2::Duration::zero()));
     }
 
     Subscription<ImageMsg>::SharedPtr image_subscriber =

@@ -8,11 +8,12 @@
 
 using namespace std::chrono_literals;
 
+
 class RuneTracker {
 public:
     const Configuration& config;
 
-private:
+
     enum class State {
         /** 跟踪正在击打的能量机关*/
         TRACKING,
@@ -24,34 +25,38 @@ private:
     State state = State::LOST;
 
     PowerRune rune{};
-    std::chrono::milliseconds    lastUpdateTime{};
+
+private:
+    std::chrono::milliseconds time[3]{};
 
 public:
-    auto track(const std::vector<FanBlade>& fanBlades, const std::chrono::milliseconds currentTime) -> std::optional<PowerRune> {
+    void track(const std::vector<FanBlade>& fanBlades, const std::chrono::milliseconds currentTime) {
         // 如果没有检测到叶片，则认为丢失目标
-        if (fanBlades.empty() && state == State::TRACKING) {
-            state = State::LOST;
-            return std::nullopt;
+        if (state == State::TRACKING) {
+            if (currentTime - time[0] > 500ms) {
+                state = State::LOST;
+                return;
+            }
         }
-        // 间隔时间过长，则认为信息已经过期
-        if (currentTime - lastUpdateTime > 500ms)
-            state = State::LOST;
 
-        if (state == State::TRACKING)
-            rune.update(fanBlades, currentTime - lastUpdateTime);
+        time[2] = time[1];
+        time[1] = time[0];
+        time[0] = currentTime;
 
-        if (state == State::LOST && fanBlades.size() == 1) {
+        if (state == State::TRACKING) {
+            rune.update(fanBlades);
+            // 计算转速
+            const double speed        = rune.angle * 1000 / (time[0] - time[1]).count();
+            const double acceleration = (speed - rune.speed) / ((time[0] - time[2]) / 2).count();
+            // 更新转速
+            rune.speed        = speed;
+            rune.acceleration = acceleration;
+        }
+
+        if (state == State::LOST && fanBlades.size() >= 1) {
             rune  = PowerRune{fanBlades[0]};
             state = State::TRACKING;
         }
-
-
-        //更新时间
-        lastUpdateTime = currentTime;
-
-        if (state == State::TRACKING)
-            return rune;
-        return std::nullopt;
     }
 
     explicit RuneTracker(const Configuration& config)

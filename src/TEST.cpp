@@ -30,7 +30,7 @@ class TestNode final : public Node {
             };
     TimerBase::SharedPtr        timer=
         create_wall_timer(
-            20ms,
+            100ms,
             [this]() -> void {
                 if (!capture.isOpened()) {
                     RCLCPP_ERROR(get_logger(), "video capture is not opened");
