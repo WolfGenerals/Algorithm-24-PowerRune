@@ -22,8 +22,8 @@ public:
     [[nodiscard]] double 外缘靶心半径比() const { return node.get_parameter("轮廓靶心半径比").as_double(); }
     [[nodiscard]] double 命中延迟_秒() const { return node.get_parameter("命中延迟_秒").as_double(); }
 
-    [[nodiscard]] cv::Matx33d            cameraMatrix() const { return cameraMatrix_; }
-    [[nodiscard]] cv::Matx<double, 1, 5> distCoeffs() const { return distCoeffs_; }
+    [[nodiscard]] const cv::Matx33d&            cameraMatrix() const { return cameraMatrix_; }
+    [[nodiscard]] const cv::Matx<double, 1, 5>& distCoeffs() const { return distCoeffs_; }
 
     explicit Configuration(rclcpp::Node& node) : node(node) {
         node.declare_parameter("enable", true);
