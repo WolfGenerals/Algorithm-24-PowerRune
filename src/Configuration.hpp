@@ -40,7 +40,7 @@ public:
         node.declare_parameter("命中延迟_秒", 0.2);
 
         cameraInfo_subscriber = node.create_subscription<sensor_msgs::msg::CameraInfo>(
-            "camera_info",
+            "/camera_info",
             10,
             [this](const sensor_msgs::msg::CameraInfo::SharedPtr cameraInfo) -> void {
                 const auto matrix = cameraInfo->k;
