@@ -51,6 +51,8 @@ class PowerRuneNode final : public rclcpp::Node {
     RuneTracker      runeTracker{config};
     Transformer3D    transformer{config};
 
+    deque<double> speeds{0,0,0,0};
+
     void progress(const Mat& image, const std_msgs::msg::Header& header) {
         const Mat binary = binarizer.binary(image);
         // DEBUG
@@ -127,7 +129,10 @@ class PowerRuneNode final : public rclcpp::Node {
             acceleration_publisher->publish(accelerationMsg);
         }
         PowerRune prediction = rune;
-        prediction.updateAngle(rune.speed * config.命中延迟_秒());
+        speeds.pop_front();
+        speeds.push_back(rune.speed);
+        const double averageSpeed = std::accumulate(std::begin(speeds), std::end(speeds), 0.0) / speeds.size();
+        prediction.updateAngle(averageSpeed * config.命中延迟_秒());
         // DEBUG
         if (config.DEBUG()) {
             Mat out = image.clone();
