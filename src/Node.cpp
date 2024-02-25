@@ -56,32 +56,46 @@ class PowerRuneNode final : public rclcpp::Node {
         // DEBUG
         if (config.DEBUG())
             binary_publisher->publish(*cv_bridge::CvImage(header, "mono8", binary).toImageMsg());
-        const optional<RIcon> icons = riconDetector.detect(binary);
-        if (!icons) return;
+        const vector<RIcon> icons = riconDetector.detect(binary);
+        if (icons.empty()) return;
         // DEBUG
         if (config.DEBUG()) {
             Mat out = image.clone();
-            circle(out, icons->position, static_cast<int>(icons->range), Scalar(0, 255, 0), 1);
-            circle(out, icons->position, static_cast<int>(config.R标最大半径()), Scalar(255, 255, 255), 1);
-            circle(out, icons->position, static_cast<int>(config.R标最小半径()), Scalar(255, 255, 255), 1);
+            for (const auto& [position, range, ratio]: icons) {
+                circle(out, position, static_cast<int>(range), Scalar(0, 255, 0), 1);
+                circle(out, position, static_cast<int>(config.R标最大半径()), Scalar(255, 255, 255), 1);
+                circle(out, position, static_cast<int>(config.R标最小半径()), Scalar(255, 255, 255), 1);
+                circle(out, position, config.外圈半径(), Scalar(0, 255, 255), 3);
+                circle(out, position, config.内圈半径(), Scalar(0, 255, 255), 3);
+                putText(out, to_string(ratio), position+Point2d{0,20}, FONT_HERSHEY_SIMPLEX, 0.3, Scalar(0, 255, 0), 1);
+            }
             ricon_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
-        const Mat masked = masker.mask(icons->position, binary);
+        optional<RIcon> icon {nullopt};
+        vector<FanBlade> fanBlades{};
+        for(const auto& icon_: icons){
+            const Mat masked = masker.mask(icon_.position, binary);
+            const auto fanBlades_ = fanBladeDetector.detect(icon_.position, masked);
+            if (fanBlades_.empty()) continue;
+            icon = icon_;
+            fanBlades = fanBlades_;
+        }
+        if  (!icon || fanBlades.empty()) return;
+
         // DEBUG
         if (config.DEBUG()) {
             Mat out = image.clone();
-            circle(out, icons->position, config.外圈半径(), Scalar(0, 255, 255), 3);
-            circle(out, icons->position, config.内圈半径(), Scalar(0, 255, 255), 3);
+            circle(out, icon->position, config.外圈半径(), Scalar(0, 255, 255), 3);
+            circle(out, icon->position, config.内圈半径(), Scalar(0, 255, 255), 3);
             mask_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
-        const auto fanBlades = fanBladeDetector.detect(icons->position, masked);
         runeTracker.track(fanBlades, std::chrono::milliseconds{header.stamp.sec * 1000 + header.stamp.nanosec / 1000000});
         if (runeTracker.state == RuneTracker::State::LOST) return;
         const PowerRune rune = runeTracker.rune;
         // DEBUG
         if (config.DEBUG()) {
             Mat out = image.clone();
-            circle(out, icons->position, static_cast<int>(icons->range), Scalar(0, 255, 0), 3);
+            circle(out, icon->position, static_cast<int>(icon->range), Scalar(0, 255, 0), 3);
             for (const auto& [offset, state]: rune.fanBlades) {
                 Scalar color{255};
                 switch (state) {
@@ -96,7 +110,7 @@ class PowerRuneNode final : public rclcpp::Node {
                         break;
                     default: ;
                 }
-                circle(out, icons->position + offset, 5, color, -1);
+                circle(out, icon->position + offset, 5, color, -1);
             }
             powe_runer_2d_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
@@ -117,7 +131,7 @@ class PowerRuneNode final : public rclcpp::Node {
         // DEBUG
         if (config.DEBUG()) {
             Mat out = image.clone();
-            circle(out, icons->position, static_cast<int>(icons->range), Scalar(0, 255, 0), 3);
+            circle(out, icon->position, static_cast<int>(icon->range), Scalar(0, 255, 0), 3);
             for (const auto& [offset, state]: prediction.fanBlades) {
                 Scalar color{255};
                 switch (state) {
@@ -132,14 +146,14 @@ class PowerRuneNode final : public rclcpp::Node {
                         break;
                     default: ;
                 }
-                circle(out, icons->position + offset, 5, color, -1);
+                circle(out, icon->position + offset, 5, color, -1);
             }
             preditction_2d_publisher->publish(*cv_bridge::CvImage(header, "bgr8", out).toImageMsg());
         }
 
         std::optional<FanBlade> targe = prediction.targe();
         if (!targe) return;
-        Point3d      direction = transformer.direction(targe->offset + icons->position);
+        Point3d      direction = transformer.direction(targe->offset + icon->position);
         double       distance  = transformer.distance(rune.length, 0.7);
         PointStamped predictionMsg;
         predictionMsg.header          = header;
@@ -147,7 +161,7 @@ class PowerRuneNode final : public rclcpp::Node {
         predictionMsg.point.x         = direction.x * distance;
         predictionMsg.point.y         = direction.y * distance;
         predictionMsg.point.z         = direction.z * distance;
-        if (!buffer.canTransform("camera_link", "odom",header.stamp, tf2::Duration::zero()))return;
+        if (!buffer.canTransform("camera_link", "odom", header.stamp, tf2::Duration::zero()))return;
         prediction_publisher->publish(buffer.transform(predictionMsg, "odom", tf2::Duration::zero()));
     }
 

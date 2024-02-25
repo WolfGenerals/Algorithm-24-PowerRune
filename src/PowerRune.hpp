@@ -7,6 +7,8 @@
 struct RIcon {
     cv::Point2d position;
     double      range;
+    // 长宽比
+    double   ratio;
 };
 
 
@@ -32,7 +34,7 @@ struct FanBlade {
     double legth() const { return sqrt(offset.x * offset.x + offset.y * offset.y); }
 
     [[nodiscard]]
-    FanBlade rotate(double radian) const {
+    FanBlade rotate(const double radian) const {
         return {
                     {
                         offset.x * cos(radian) - offset.y * sin(radian),
@@ -49,10 +51,10 @@ struct FanBlade {
 struct PowerRune {
     FanBlade fanBlades[5]; /** \brief 扇叶 */
 
-    double length = 0.0;//米
-    double angle = 0.0;//弧度
-    double speed = 0.0;//弧度/秒
-    double acceleration = 0.0;//弧度/秒^2
+    double length       = 0.0; //米
+    double angle        = 0.0; //弧度
+    double speed        = 0.0; //弧度/秒
+    double acceleration = 0.0; //弧度/秒^2
 
     /** 更新叶片长度 */
     void updateLength(const double length) {
@@ -97,7 +99,8 @@ struct PowerRune {
             // 计算平均叶片长度
             length += fanBlade.legth() / static_cast<double>(fanBlades.size());
             // 计算平均偏移角度
-            angle += asin(marched->offset.cross(fanBlade.offset)/marched->legth()/fanBlade.legth()) / static_cast<double>(fanBlades.size());
+            angle += asin(marched->offset.cross(fanBlade.offset) / marched->legth() / fanBlade.legth()) / static_cast<double>(fanBlades.
+                size());
         }
         // 更新叶片长度角度
         updateLength(length);

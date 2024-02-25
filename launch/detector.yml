@@ -12,18 +12,18 @@ launch:
         - name: 二值化阈值
           value: 200
         - name: R标最大长宽比
-          value: 1.1
+          value: 1.2
         - name: R标最小填充率
-          value: 0.7
+          value: 0.5
         - name: R标最小半径
-          value: 10.0
+          value: 6.0
         - name: R标最大半径
-          value: 20.0
+          value: 10.0
         - name: 内圈半径
-          value: 160
+          value: 90
         - name: 外圈半径
-          value: 220
+          value: 120
         - name: 扇叶外缘最小面积
-          value: 100
+          value: 50
         - name: 轮廓靶心半径比
           value: 0.85

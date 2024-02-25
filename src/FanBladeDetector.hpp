@@ -21,7 +21,8 @@ public:
             const cv::RotatedRect rect = minAreaRect(contour);
             //判断是否是扇叶外缘
             //面积
-            if (contourArea(contour) < config.扇叶外缘最小面积())
+            const double area = contourArea(contour);
+            if (area < config.扇叶外缘最小面积())
                 continue;
             //计算靶心
             result.push_back(FanBlade{(static_cast<cv::Point2d>(rect.center) - center) * config.外缘靶心半径比(), RuneState::INACTIVE});

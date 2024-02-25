@@ -44,13 +44,13 @@ class TestNode final : public Node {
                     return;
                 }
                 cv::Mat image;
-                cv::resize(frame, image, cv::Size(),0.75,0.75);
+                cv::resize(frame, image, cv::Size(), 0.4, 0.4);// 480p
                 std_msgs::msg::Header header{};
                 header.frame_id = "camera_link";
                 time+=20ms;
                 header.stamp    = time;
 
-                ImageMsg::SharedPtr imageMsg = cv_bridge::CvImage{
+                const ImageMsg::SharedPtr imageMsg = cv_bridge::CvImage{
                     header,
                     "bgr8",
                     image
